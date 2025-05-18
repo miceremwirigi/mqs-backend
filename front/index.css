@@ -1,0 +1,232 @@
+/* General styles for the index.html */
+
+:root {
+    --main-bg-color: #f4f4f9;
+    --main-text-color: #333;
+    --header-bg-color: #030427;
+    --header-text-color: white;
+    --footer-bg-color: #333;
+    --footer-text-color: white;
+    --button-bg-color: #030536;
+    --button-text-color: white;
+    --button-hover-color: #030427;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: var(--main-bg-color);
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.header {
+    background-color: var(--header-bg-color);
+    color: white;
+    padding: 0;
+    text-align: center;
+    font-size: 1.5rem;
+    max-height: fit-content;
+    margin-top: 0;
+}
+
+.body {
+    padding: 2rem;
+}
+
+h1, h2, h3 {
+    color: #eef5ef;
+}
+
+p {
+    line-height: 1.6;
+}
+
+a {
+    color: #1124f0;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+button {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+button:hover {
+    background-color: var(--button-hover-color);
+}
+
+.footer {
+    background-color: var(--header-bg-color);
+    color: var(--footer-text-color);
+    text-align: center;
+    padding: 1rem 0;
+    margin-top: 2rem;
+    font-size: 0.9rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 1rem;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 0.75rem;
+}
+
+table th {
+    background-color: var(--header-bg-color);
+    color: var(--header-text-color);
+}
+
+table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+table tr:hover {
+    background-color: #f1f1f1;
+}
+
+#show-form-button {
+    width: fit-content;
+    margin-left: auto;
+    margin-right: 4rem;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    max-width: 60vw;
+    margin: 0 0 auto 4rem;
+    
+}
+
+form h3 {
+    margin-bottom: 0.5rem;
+    color: var(--header-bg-color);
+}
+
+
+form input[type="text"],
+form input[type="email"],
+form input[type="password"],
+form input[type="date"],
+form input[type="number"],
+form textarea,
+form select {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+form textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+form button[type="submit"] {
+    align-self: flex-start;
+    background-color: #030427;
+    color: var(--button-text-color);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+/* form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 1rem;
+    box-sizing: border-box;
+} */
+
+form button[type="submit"]:hover {
+    background-color: var(--button-hover-color);
+}
+
+/* Responsive styles for smaller screens and orientation */
+@media (max-width: 768px) {
+    body {
+        padding: 1rem;
+    }
+
+    .header {
+        font-size: 1.2rem;
+        padding: 0.5rem;
+    }
+
+    .body {
+        padding: 1rem;
+    }
+
+    form {
+        max-width: 90vw;
+        margin: 0 auto;
+    }
+
+    form button[type="submit"] {
+        width: 100%;
+    }
+
+    #show-form-button {
+        margin-right: 1rem;
+    }
+
+    table {
+        font-size: 0.9rem;
+    }
+
+    table th, table td {
+        padding: 0.5rem;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+    body {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+
+    .header {
+        font-size: 1rem;
+        padding: 0.5rem;
+    }
+
+    .body {
+        padding: 0.5rem;
+    }
+
+    form {
+        max-width: 70vw;
+    }
+
+    table {
+        font-size: 0.8rem;
+    }
+}

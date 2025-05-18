@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="index.css">
+    <title>MQS</title>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">MQS Inc.</h1>
+        <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
+    </div>
+    </div class="content">
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Company Name</th>
+                    <th>Location</th>
+                    <th>Email Address</th>
+                    <th>Last Service Date</th>
+                    <th>Servicing Period (months)</th>
+                    <th>Next Service Date</th>
+                    <th>Service Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Equity Afia Donholm</td>
+                    <td>Donholm</td>
+                    <td>eadonholm@email.com</td>
+                    <td>2025-05-01</td>
+                    <td>1</td>
+                    <td>2025-06-01</td>
+                    <td>🟠</td>
+                </tr><tr>
+                    <td>RFH Kinoo</td>
+                    <td>Kinoo</td>
+                    <td>rfhkinoo@email.com</td>
+                    <td>2025-01-01</td>
+                    <td>2</td>
+                    <td>2025-03-01</td>
+                    <td>❌</td>
+                </tr>
+                </tr>
+                <tr>
+                    <td>Modern Healthcare</td>
+                    <td>Kintengela</td>
+                    <td>mdhcare@email.com</td>
+                    <td>2025-04-01</td>
+                    <td>6</td>
+                    <td>2025-03-01</td>
+                    <td>✅</td>
+                </tr>
+                <!-- Entries will be dynamically added here -->
+            </tbody>
+        </table>
+        <button id="show-form-button" onclick="toggleFormVisibility()">Add Entry</button>
+        <script>
+            
+        </script>
+
+        <form id="add-entry-form">
+            <h3>Add New Customer</h3>
+            <label for="company">Company Name:</label>
+            <input type="text" id="company" name="company" required>
+            <br>
+            <label for="location">Location:</label>
+            <input type="text" id="location" name="location" required>
+            <br>
+            <label for="email">Email Address:</label>
+            <input type="email" id="email" name="email" required>
+            <br>
+            <label for="last-service-date">Last Service Date:</label>
+            <input type="date" id="last-service-date" name="last-service-date" required>
+            <br>
+            <label for="servicing-period">Servicing Period (months):</label>
+            <input type="number" id="servicing-period" name="servicing-period" required>
+            <br>
+            <button type="button" onclick="addCustomer()">Add Customer</button>
+        </form>
+        <script>
+            // Function to add a new customer entry
+            function addCustomer() {
+                const company = document.getElementById('company').value;
+                const location = document.getElementById('location').value;
+                const email = document.getElementById('email').value;
+                const lastServiceDate = document.getElementById('last-service-date').value;
+                const servicingPeriod = parseInt(document.getElementById('servicing-period').value);
+
+                if (company && location && email && lastServiceDate && servicingPeriod) {
+                    const tableBody = document.querySelector('table tbody');
+                    const newRow = document.createElement('tr');
+
+                    const nextServiceDate = new Date(lastServiceDate);
+                    nextServiceDate.setMonth(nextServiceDate.getMonth() + servicingPeriod);
+
+                    const today = new Date();
+                    const timeDiff = nextServiceDate - today;
+                    const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+                    const marker = daysDiff <= 0 ? '❌' : daysDiff <= 30 ? '🟠' : '✅';
+
+                    newRow.innerHTML = `
+                        <td>${company}</td>
+                        <td>${location}</td>
+                        <td>${email}</td>
+                        <td>${lastServiceDate}</td>
+                        <td>${servicingPeriod}</td>
+                        <td>${nextServiceDate.toISOString().split('T')[0]}</td>
+                        <td>${marker}</td>
+                    `;
+
+                    tableBody.appendChild(newRow);
+                    document.getElementById('add-entry-form').reset();
+                } else {
+                    alert('Please fill in all fields.');
+                }
+            }
+
+            // set form visibility toggle
+            function toggleFormVisibility() {
+            const form = document.getElementById('add-entry-form');
+            form.style.display = form.style.display === 'none' || form.style.display === '' ? 'flex' : 'none';
+            }
+
+            // Initially hide the form
+            document.getElementById('add-entry-form').style.display = 'none';
+        </script>
+        
+        <p>For more information, please refer to the documentation.</p>
+        <p>Version: 1.0.0</p>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2025 MQS. All rights reserved.</p>
+    </div>
+</body>
+</html>
