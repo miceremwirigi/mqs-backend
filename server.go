@@ -1,14 +1,19 @@
 package main
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"os"
+
+	"github.com/gofiber/fiber/v3"
+	"github.com/miceremwirigi/mqs-backend/apis"
+	"github.com/miceremwirigi/mqs-backend/databases"
+)
 
 func main() {
 	app := fiber.New()
+	os.Setenv("env", "production")
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, world")
-	})
-	app.Static("/home", "./front")
+	db := databases.StartDatabase()
+	apis.RegisterRoutes(app, db)
 
 	app.Listen(":3000")
 }
