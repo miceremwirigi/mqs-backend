@@ -13,4 +13,19 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to drop table: %s", err)
 	}
+
+	err = db.Migrator().DropTable(&models.Equipment{})
+	if err != nil {
+		log.Fatalf("Failed to drop table: %s", err)
+	}
+
+	err = db.Migrator().DropTable(&models.Engineer{})
+	if err != nil {
+		log.Fatalf("Failed to drop table: %s", err)
+	}
+
+	err = db.Migrator().DropTable(&models.Service{})
+	if err != nil {
+		log.Fatalf("Failed to drop table: %s", err)
+	}
 }
