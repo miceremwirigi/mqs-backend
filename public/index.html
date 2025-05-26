@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="/style.css">
+    <script src="/script.js"></script>
     <title>MQS</title>
 </head>
 <body>
@@ -11,7 +12,7 @@
         <h1 class="title">MQS Inc.</h1>
         <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
     </div>
-    </div class="content">
+    <div class="content">
 
         <table>
             <thead>
@@ -25,7 +26,7 @@
                     <th>Service Status</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="customers-table-body">
                 <tr>
                     <td>Equity Afia Donholm</td>
                     <td>Donholm</td>
@@ -56,12 +57,12 @@
                 <!-- Entries will be dynamically added here -->
             </tbody>
         </table>
-        <button id="show-form-button" onclick="toggleFormVisibility()">Add Entry</button>
+        <button id="show-form-button"  class="show-form-button" onclick="toggleFormVisibility(`add-entry-form`)">Add Entry</button>
         <script>
             
         </script>
 
-        <form id="add-entry-form">
+        <form id="add-entry-form" class="add-content-form">
             <h3>Add New Customer</h3>
             <label for="company">Company Name:</label>
             <input type="text" id="company" name="company" required>
@@ -90,7 +91,7 @@
                 const servicingPeriod = parseInt(document.getElementById('servicing-period').value);
 
                 if (company && location && email && lastServiceDate && servicingPeriod) {
-                    const tableBody = document.querySelector('table tbody');
+                    const tableBody = document.getElementById('customers-table-body');
                     const newRow = document.createElement('tr');
 
                     const nextServiceDate = new Date(lastServiceDate);
@@ -120,13 +121,84 @@
             }
 
             // set form visibility toggle
-            function toggleFormVisibility() {
-            const form = document.getElementById('add-entry-form');
+            function toggleFormVisibility(formId) {
+            const form = document.getElementById(formId);
             form.style.display = form.style.display === 'none' || form.style.display === '' ? 'flex' : 'none';
             }
 
-            // Initially hide the form
-            document.getElementById('add-entry-form').style.display = 'none';
+            // Initially hide the input forms
+            function hideInputForms(){
+                var addForms = document.getElementsByClassName("add-content-form");
+                for (var i=0; i<addForms.length; i++){
+                    addForms[i].style.display = 'none';
+                }
+            }
+        </script>
+
+<!------------------ Hospitals Section ------------------>
+        <table>
+            <thead>
+                <tr>
+                    <th>Hospital Name</th>
+                    <th>Location</th>
+                    <th>Contact</th>
+                </tr>
+            </thead>
+            <tbody id="hospitals-table-body">
+            </tbody>
+        </table>
+
+        <button id="show-add-hospital-form-button" class="show-form-button" onclick="toggleFormVisibility(`add-hospital-form`)">Add Hospital</button>
+
+        <form id="add-hospital-form" class="add-content-form" action="/api/hospitals" method="post">
+            <h3>Add New Hospital</h3>
+            <label for="hospital-name">Hospital Name</label>
+            <input type="text" id="hospital-name" name="name" required>
+            <br>
+            <label for="hospital-location">Location</label>
+            <input type="text" id="hospital-location" name="location" required>
+            <br>
+            <label for="hospital-contact">Contact</label>
+            <input type="text" id="hospital-contact" name="phone" required>
+            <br>
+            <button type="submit">Add Hospital</button>
+        </form>
+        <script>
+           hideInputForms(); // Hide all input forms in the page
+           const hospitalsUrl = "/api/hospitals"; // endpoint to get hospitals list
+           function getHospitals() {
+            fetch(hospitalsUrl)
+            .then(response => {
+                if (!response.ok){
+                    throw new Error(`HTTP Error: Status ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);
+                for (var i = 0; i < data.data.length; i++) {
+                    const hospitalsTableBody = document.getElementById("hospitals-table-body")
+                    // const newLink = document.createElement("a")
+                    // newLink.href = `/api/hospitals/${data.data[i].id}`
+                    const newRow = document.createElement("tr")
+                    newRow.innerHTML = `                                                 
+                            <td>${data.data[i].Name}</td>
+                            <td>${data.data[i].Location}</td>
+                            <td>${data.data[i].Phone}</td>      
+                        `;
+                    // make the rows clickable to redirect to each hospitals details
+                    newRow.setAttribute("data-href", `/api/hospitals/details/${data.data[i].id}`)
+                    newRow.addEventListener("click", function () {
+                            window.location.href = this.dataset.href;
+                        });
+                    hospitalsTableBody.appendChild(newRow);
+                }
+            })
+            .catch(error => {
+                console.Error("error fetching hospitals");
+            })
+           }
+           getHospitals();
         </script>
         
         <p>For more information, please refer to the documentation.</p>

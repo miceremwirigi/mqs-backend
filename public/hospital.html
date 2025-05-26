@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/style.css">
+    <script src="/script.js"></script>
+    <title>MQS</title>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">MQS Inc.</h1>
+        <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
+    </div>
+    </div class="content"> 
+
+        <h3 style="color: black;">Hospital Name: {{.Name}}</h3>
+        <h3 style="color: black;">Location: {{.Location}}</h3>
+        <h3 style="color: black;">Contact: {{.Phone}}</h3>
+
+        <form id="update-hospital-form" class="add-content-form" action="#" method="post" target="_self">
+            <h3>Add New Hospital</h3>
+            <label for="hospital-name">Hospital Name</label>
+            <input type="text" id="hospital-name" name="name" value="{{.Name}}" required>
+            <br>
+            <label for="hospital-location">Location</label>
+            <input type="text" id="hospital-location" name="location" value="{{.Location}}" required>
+            <br>
+            <label for="hospital-contact">Contact</label>
+            <input type="text" id="hospital-contact" name="phone" value="{{.Phone}}" required>
+            <br>
+            <button type="submit" onclick="handleUpdateFormSubmit()">Update Hospital</button>
+        </form>
+
+        <span>
+            <button onclick="document.location='../../../index.html'">Back</button>
+            <button onclick="toggleFormVisibility(`update-hospital-form`)">Edit</button>
+            <button onclick="deleteHospital()">Delete</button>
+        </span>
+
+        <script>
+            deleteHospitalUrl = "/api/hospitals/delete/{{.id}}";
+            function deleteHospital() {
+                fetch(deleteHospitalUrl,{
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => {
+                    if (!response.ok){
+                    throw new Error(`HTTP Error: Status ${response.status}`);
+                }
+                    return response.json();
+                })
+                .then(data => {
+                    window.location.href = "/index.html";
+                    alert(data.message);
+                })
+                .catch(error => {
+                    console.Error("error fetching hospitals");
+                    alert("Delete failed!");
+                })
+            }
+
+            async function handleUpdateFormSubmit() {
+                hideInputForms()
+                 window.location.href = "/api/hospitals/details/{{.id}}";
+            }
+        </script>
+          
+        <p>For more information, please refer to the documentation.</p>
+        <p>Version: 1.0.0</p>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2025 MQS. All rights reserved.</p>
+    </div>
+</body>
+</html>
