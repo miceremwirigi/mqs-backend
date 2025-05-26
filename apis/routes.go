@@ -11,7 +11,7 @@ func RegisterRoutes(app *fiber.App, db *gorm.DB) {
 	app.Get("/", func(c fiber.Ctx) error {
 		return c.SendString("Hello, world")
 	})
-	app.Get("/home", static.New("./public"))
+	app.Get("/*", static.New("./public"))
 
 	app.Get("/ping", func(c fiber.Ctx) error {
 		return c.SendString("Pong!")
@@ -24,10 +24,12 @@ func RegisterRoutes(app *fiber.App, db *gorm.DB) {
 		DB: db,
 	}
 
-	// hospitalsRoutes.Post("/", hospitalHandler.AddHospital)
+	hospitalsRoutes.Post("/", hospitalHandler.AddHospital)
 	hospitalsRoutes.Get("/", nil, hospitalHandler.GetAllHospitals)
-	// hospitalsRoutes.Get("/:id", hospitalHandler.GetHospital)
-	// hospitalsRoutes.Put("/:id", hospitalHandler.UpdateHospital)
-	// hospitalsRoutes.Delete("/:id", hospitalHandler.DeleteHospital)
+	hospitalsRoutes.Get("/:id", hospitalHandler.GetHospital)
+	hospitalsRoutes.Get("/details/:id", hospitalHandler.GetHospitalHtml)
+	hospitalsRoutes.Put("/:id", hospitalHandler.UpdateHospital)
+	hospitalsRoutes.Post("/details/:id", hospitalHandler.UpdateHospital)
+	hospitalsRoutes.Delete("/delete/:id", hospitalHandler.DeleteHospital)
 
 }

@@ -11,6 +11,7 @@ type BaseModel struct {
 	ID        uuid.UUID `gorm:"primary_key;type:uuid;default:uuid_generate_v4();column:id" json:"id"`
 	CreatedAt time.Time `gorm:"column:created_at" json:"created_at"`
 	UpdatedAt time.Time `gorm:"column:updated_at" json:"updated_at"`
+	DeletedAt time.Time `gorm:"column:deleted_at" json:"deleted_at"`
 }
 
 func (b *BaseModel) BeforeCreate(tx *gorm.DB) (err error) {

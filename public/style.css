@@ -103,7 +103,7 @@ table tr:hover {
     background-color: #f1f1f1;
 }
 
-#show-form-button {
+.show-form-button {
     width: fit-content;
     margin-left: auto;
     margin-right: 4rem;
@@ -156,19 +156,24 @@ form button[type="submit"] {
     transition: background-color 0.3s ease;
 }
 
-/* form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    max-width: 500px;
-    margin: 0 auto;
-    padding: 1rem;
-    box-sizing: border-box;
-} */
-
 form button[type="submit"]:hover {
     background-color: var(--button-hover-color);
 }
+
+.show-form-button {
+    width: fit-content;
+    margin-left: auto;
+    margin-right: 4rem;
+}
+
+/* .row-link{
+    position: relative;
+    top: 0;
+    left: 0;
+    content: "";
+    width: 400%;
+    height: 3rem;
+} */
 
 /* Responsive styles for smaller screens and orientation */
 @media (max-width: 768px) {
