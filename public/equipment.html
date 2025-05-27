@@ -17,40 +17,49 @@
         <div id="success-popup">Success</div>
         <div id="failed-popup">Failed</div>
 
-        <h3 style="color: black;">Hospital Name: {{.Name}}</h3>
-        <h3 style="color: black;">Location: {{.Location}}</h3>
-        <h3 style="color: black;">Contact: {{.Phone}}</h3>
+        <h3 style="color: black;">Equipment Name: {{.name}}</h3>
+        <h3 style="color: black;">Model: {{.model}}</h3>
+        <h3 style="color: black;">ServicingPeriod: {{.servicing-period}}</h3>
+        <h3 style="color: black;">Hospital: {{.hospital-id}}</h3>
+
+
+
+
+
 
         <!-- <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe> -->
-        <form id="update-hospital-form" class="add-content-form">
-            <h3>Add New Hospital</h3>
-            <label for="hospital-name">Hospital Name</label>
-            <input type="text" id="hospital-name" name="name" value="{{.Name}}" required>
+        <form id="update-equipment-form" class="add-content-form">
+            <h3>Add New Equipment</h3>
+            <label for="equipment-name">Equipment Name</label>
+            <input type="text" id="equipment-name" name="name" value="{{.name}}" required>
             <br>
-            <label for="hospital-location">Location</label>
-            <input type="text" id="hospital-location" name="location" value="{{.Location}}" required>
+            <label for="equipment-model">Model</label>
+            <input type="text" id="equipment-model" name="model" value="{{.model}}" required>
             <br>
-            <label for="hospital-contact">Contact</label>
-            <input type="text" id="hospital-contact" name="phone" value="{{.Phone}}" required>
+            <label for="equipment-servicing-period">Servicing Period</label>
+            <input type="text" id="equipment-servicing-period" name="servicing-period" value="{{.servicing-period}}" required>
             <br>
-            <button type="submit" onclick="handleUpdateFormSubmit()">Update Hospital</button>
+            <label for="equipment-hospital-id">Hospital</label>
+            <input type="text" id="equipment-hospital-id" name="hospital-id" value="{{.hospital-id}}" required>
+            <br>
+            <button type="submit" onclick="handleUpdateFormSubmit()">Update Equipment</button>
         </form>
 
         <span>
             <button onclick="document.location='../../../index.html'">Back</button>
-            <button onclick="toggleFormVisibility(`update-hospital-form`)">Edit</button>
-            <button onclick="deleteHospital()">Delete</button>
+            <button onclick="toggleFormVisibility(`update-equipment-form`)">Edit</button>
+            <button onclick="deleteEquipment()">Delete</button>
         </span>
 
         <script>
-            const form = document.getElementById("update-hospital-form");
+            const form = document.getElementById("update-equipment-form");
             form.addEventListener( 'submit', async (event) => {
                     event.preventDefault();
                 })
 
-            deleteHospitalUrl = "/api/hospitals/delete/{{.id}}";
-            function deleteHospital() {
-                fetch(deleteHospitalUrl,{
+            deleteEquipmentUrl = "/api/equipments/delete/{{.id}}";
+            function deleteEquipment() {
+                fetch(deleteEquipmentUrl,{
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -63,17 +72,18 @@
                     return response.json();
                 })
                 .then(data => {
+                    
                     showSuccessMessage();
                     window.location.href = "/index.html";
                 })
                 .catch(error => {
-                    console.Error("error fetching hospitals");
+                    console.Error("error fetching equipments");
                     showFailedMessage();
                 })
             }
 
             async function handleUpdateFormSubmit() {
-                const form = document.getElementById("update-hospital-form");                
+                const form = document.getElementById("update-equipment-form");                
                 const formData = new FormData(form);
 
                 const jsonObject = Object.fromEntries(formData.entries())
@@ -81,7 +91,7 @@
                 const jsonString = JSON.stringify(jsonObject);
                 console.log(`form data ${jsonString}`);
 
-                await fetch ("/api/hospitals/{{.id}}",{
+                await fetch ("/api/equipments/{{.id}}",{
                     method: "PUT",
                     headers: {
                         'Content-Type': 'application/json',
@@ -96,14 +106,13 @@
                     return response.json();
                 })
                 .then( body => {
-                    console.log(`data is: ${body.data}`)
                     showSuccessMessage();
                 })
                 .catch( error => {
-                    console.error(`"error updating hospital: ${error}`);
+                    console.error(`"error updating equipment: ${error}`);
                     showFailedMessage();
                 })
-                window.location.href = "/api/hospitals/details/{{.id}}";
+                // window.location.href = "/api/equipments/details/{{.id}}";
                 hideInputForms();
             }
 

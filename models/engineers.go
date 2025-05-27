@@ -2,6 +2,6 @@ package models
 
 type Engineer struct {
 	BaseModel
-	Name    string
-	Contact string
+	Name    string `json:"name"`
+	Contact string `json:"contact"`
 }

@@ -12,7 +12,7 @@ var (
 	StatusUnauthorizedResponseCode        = 401
 )
 
-func GeneralApiResponse(c fiber.Ctx, statusCode int, message string, data interface{}) error {
+func GeneralApiResponse(c fiber.Ctx, statusCode int, message string, data any) error {
 	return c.Status(statusCode).JSON(fiber.Map{
 		"status":  statusCode,
 		"message": message,
