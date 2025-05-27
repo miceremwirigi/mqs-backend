@@ -17,40 +17,36 @@
         <div id="success-popup">Success</div>
         <div id="failed-popup">Failed</div>
 
-        <h3 style="color: black;">Hospital Name: {{.Name}}</h3>
-        <h3 style="color: black;">Location: {{.Location}}</h3>
-        <h3 style="color: black;">Contact: {{.Phone}}</h3>
+        <h3 style="color: black;">Engineer Name: {{.name}}</h3>
+        <h3 style="color: black;">Contact: {{.contact}}</h3>
 
         <!-- <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe> -->
-        <form id="update-hospital-form" class="add-content-form">
-            <h3>Add New Hospital</h3>
-            <label for="hospital-name">Hospital Name</label>
-            <input type="text" id="hospital-name" name="name" value="{{.Name}}" required>
+        <form id="update-engineer-form" class="add-content-form">
+            <h3>Add New Engineer</h3>
+            <label for="engineer-name">Engineer Name</label>
+            <input type="text" id="engineer-name" name="name" value="{{.name}}" required>
             <br>
-            <label for="hospital-location">Location</label>
-            <input type="text" id="hospital-location" name="location" value="{{.Location}}" required>
+            <label for="engineer-contact">Contact</label>
+            <input type="text" id="engineer-contact" name="contact" value="{{.contact}}" required>
             <br>
-            <label for="hospital-contact">Contact</label>
-            <input type="text" id="hospital-contact" name="phone" value="{{.Phone}}" required>
-            <br>
-            <button type="submit" onclick="handleUpdateFormSubmit()">Update Hospital</button>
+            <button type="submit" onclick="handleUpdateFormSubmit()">Update Engineer</button>
         </form>
 
         <span>
             <button onclick="document.location='../../../index.html'">Back</button>
-            <button onclick="toggleFormVisibility(`update-hospital-form`)">Edit</button>
-            <button onclick="deleteHospital()">Delete</button>
+            <button onclick="toggleFormVisibility(`update-engineer-form`)">Edit</button>
+            <button onclick="deleteEngineer()">Delete</button>
         </span>
 
         <script>
-            const form = document.getElementById("update-hospital-form");
+            const form = document.getElementById("update-engineer-form");
             form.addEventListener( 'submit', async (event) => {
                     event.preventDefault();
                 })
 
-            deleteHospitalUrl = "/api/hospitals/delete/{{.id}}";
-            function deleteHospital() {
-                fetch(deleteHospitalUrl,{
+            deleteEngineerUrl = "/api/engineers/delete/{{.id}}";
+            function deleteEngineer() {
+                fetch(deleteEngineerUrl,{
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -63,17 +59,18 @@
                     return response.json();
                 })
                 .then(data => {
+                    
                     showSuccessMessage();
                     window.location.href = "/index.html";
                 })
                 .catch(error => {
-                    console.Error("error fetching hospitals");
+                    console.Error("error fetching engineers");
                     showFailedMessage();
                 })
             }
 
             async function handleUpdateFormSubmit() {
-                const form = document.getElementById("update-hospital-form");                
+                const form = document.getElementById("update-engineer-form");                
                 const formData = new FormData(form);
 
                 const jsonObject = Object.fromEntries(formData.entries())
@@ -81,7 +78,7 @@
                 const jsonString = JSON.stringify(jsonObject);
                 console.log(`form data ${jsonString}`);
 
-                await fetch ("/api/hospitals/{{.id}}",{
+                await fetch ("/api/engineers/{{.id}}",{
                     method: "PUT",
                     headers: {
                         'Content-Type': 'application/json',
@@ -96,14 +93,13 @@
                     return response.json();
                 })
                 .then( body => {
-                    console.log(`data is: ${body.data}`)
                     showSuccessMessage();
                 })
                 .catch( error => {
-                    console.error(`"error updating hospital: ${error}`);
+                    console.error(`"error updating engineer: ${error}`);
                     showFailedMessage();
                 })
-                window.location.href = "/api/hospitals/details/{{.id}}";
+                // window.location.href = "/api/engineers/details/{{.id}}";
                 hideInputForms();
             }
 

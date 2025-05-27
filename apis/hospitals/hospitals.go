@@ -1,6 +1,8 @@
 package hospitals
 
 import (
+	"encoding/json"
+	"errors"
 	"log"
 
 	"github.com/gofiber/fiber/v3"
@@ -101,10 +103,16 @@ func (h *Handler) AddHospital(c fiber.Ctx) error {
 	}
 
 	hospital := &models.Hospital{}
-	err := c.Bind().Form(hospital)
+
+	err := json.Unmarshal(c.Body(), hospital)
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
 			"error binding body to struct", err.Error())
+	}
+
+	if hospital.Name == "" {
+		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
+			"error binding body to struct", errors.New("error: empty hospital name"))
 	}
 
 	err = tx.Create(hospital).Error
@@ -133,12 +141,16 @@ func (h *Handler) UpdateHospital(c fiber.Ctx) error {
 	id := c.Params("id")
 
 	hospital := &models.Hospital{}
-	err := c.Bind().Form(hospital)
+	err := json.Unmarshal(c.Body(), hospital)
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
 			"error binding body to struct", err.Error())
 	}
 
+	if hospital.Name == "" {
+		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
+			"error binding body to struct", errors.New("error: empty hospital name"))
+	}
 	err = tx.Where("id = ?", id).Updates(hospital).Error
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,

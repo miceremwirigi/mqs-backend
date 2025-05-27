@@ -13,6 +13,8 @@
         <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
     </div>
     <div class="content">
+        <div id="success-popup">Success</div>
+        <div id="failed-popup">Failed</div>
 
         <table>
             <thead>
@@ -124,6 +126,8 @@
             function toggleFormVisibility(formId) {
             const form = document.getElementById(formId);
             form.style.display = form.style.display === 'none' || form.style.display === '' ? 'flex' : 'none';
+            form.scrollIntoView({ behavior: "smooth", block: "center" });
+
             }
 
             // Initially hide the input forms
@@ -132,6 +136,22 @@
                 for (var i=0; i<addForms.length; i++){
                     addForms[i].style.display = 'none';
                 }
+            }
+
+            function showSuccessMessage() {
+                const popup = document.getElementById('success-popup');
+                popup.style.display = 'block';
+                setTimeout(function() {
+                    popup.style.display = 'none';
+                }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
+            }
+
+            function showFailedMessage() {
+                const popup = document.getElementById('failed-popup');
+                popup.style.display = 'block';
+                setTimeout(function() {
+                    popup.style.display = 'none';
+                }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
             }
         </script>
 
@@ -150,7 +170,8 @@
 
         <button id="show-add-hospital-form-button" class="show-form-button" onclick="toggleFormVisibility(`add-hospital-form`)">Add Hospital</button>
 
-        <form id="add-hospital-form" class="add-content-form" action="/api/hospitals" method="post">
+        <!-- <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe> -->
+        <form id="add-hospital-form" class="add-content-form">
             <h3>Add New Hospital</h3>
             <label for="hospital-name">Hospital Name</label>
             <input type="text" id="hospital-name" name="name" required>
@@ -161,11 +182,12 @@
             <label for="hospital-contact">Contact</label>
             <input type="text" id="hospital-contact" name="phone" required>
             <br>
-            <button type="submit">Add Hospital</button>
+            <button type="submit" onclick="handleAddHospitalsButton()">Add Hospital</button>
         </form>
         <script>
            hideInputForms(); // Hide all input forms in the page
            const hospitalsUrl = "/api/hospitals"; // endpoint to get hospitals list
+
            function getHospitals() {
             fetch(hospitalsUrl)
             .then(response => {
@@ -198,8 +220,379 @@
                 console.Error("error fetching hospitals");
             })
            }
+
+            const form = document.getElementById("add-hospital-form");
+            form.addEventListener( 'submit', async (event) => {
+                    event.preventDefault();
+                })
+
+           async function handleAddHospitalsButton() {
+                const form = document.getElementById("add-hospital-form");                
+                const formData = new FormData(form);
+
+                const jsonObject = Object.fromEntries(formData.entries())
+
+                const jsonString = JSON.stringify(jsonObject);
+                console.log(` form data ${jsonString}`);
+
+                await fetch ("/api/hospitals",{
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: jsonString,
+                })
+                .then(response => {
+                    console.log(response)
+                    if (!response.ok) {
+                        throw new Error(`HTTP Error: Status ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then( body => {
+                    showSuccessMessage();
+                })
+                .catch( error => {
+                    console.error(`"error adding hospital: ${error}`);
+                    showFailedMessage();
+                })
+                window.location.href = "/index.html";
+                hideInputForms();
+           }
            getHospitals();
         </script>
+
+        <!------------------ ------------------------ ------------------>
+
+        <!------------------ Engineers Section ------------------>
+        <table>
+            <thead>
+                <tr>
+                    <th>Engineer Name</th>
+                    <th>Contact</th>
+                </tr>
+            </thead>
+            <tbody id="engineers-table-body">
+            </tbody>
+        </table>
+
+        <button id="show-add-engineer-form-button" class="show-form-button" onclick="toggleFormVisibility(`add-engineer-form`)">Add Engineer</button>
+
+        <!-- <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe> -->
+        <form id="add-engineer-form" class="add-content-form">
+            <h3>Add New Engineer</h3>
+            <label for="engineer-name">Engineer Name</label>
+            <input type="text" id="engineer-name" name="name" required>
+            <br>
+            <label for="engineer-contact">Contact</label>
+            <input type="text" id="engineer-contact" name="contact" required>
+            <br>
+            <button type="submit" onclick="handleAddEngineersButton()">Add Engineer</button>
+        </form>
+        <script>
+           hideInputForms(); // Hide all input forms in the page
+           const engineersUrl = "/api/engineers"; // endpoint to get engineers list
+
+           // Retreives all engineers from api and displays them in a table
+           function getEngineers() {
+            fetch(engineersUrl)
+            .then(response => {
+                if (!response.ok){
+                    throw new Error(`HTTP Error: Status ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);
+                for (var i = 0; i < data.data.length; i++) {
+                    const engineersTableBody = document.getElementById("engineers-table-body")
+                    const newRow = document.createElement("tr")
+                    newRow.innerHTML = `                                                 
+                            <td>${data.data[i].name}</td>
+                            <td>${data.data[i].contact}</td>      
+                        `;
+                    // make the rows clickable to redirect to each engineers details
+                    newRow.setAttribute("data-href", `/api/engineers/details/${data.data[i].id}`)
+                    newRow.addEventListener("click", function () {
+                            window.location.href = this.dataset.href;
+                        });
+                    engineersTableBody.appendChild(newRow);
+                }
+            })
+            .catch(error => {
+                console.Error("error fetching engineers");
+            })
+           }
+
+            const engineersForm = document.getElementById("add-engineer-form");
+            engineersForm.addEventListener( 'submit', async (event) => {
+                    event.preventDefault();
+                })
+
+           async function handleAddEngineersButton() {
+                const engineersForm = document.getElementById("add-engineer-form");                
+                const formData = new FormData(engineersForm);
+
+                const jsonObject = Object.fromEntries(formData.entries())
+
+                const jsonString = JSON.stringify(jsonObject);
+                console.log(` form data ${jsonString}`);
+
+                await fetch ("/api/engineers",{
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: jsonString,
+                })
+                .then(response => {
+                    console.log(response.body)
+                    if (!response.ok) {
+                        throw new Error(`HTTP Error: Status ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then( body => {
+                    showSuccessMessage();
+                })
+                .catch( error => {
+                    console.error(`"error adding engineer: ${error}`);
+                    showFailedMessage();
+                })
+                window.location.href = "/index.html";
+                hideInputForms();
+           }
+           getEngineers();
+        </script>
+
+        <!------------------ ------------------------ ------------------>
+
+
+
+        <!------------------ Equipments Section ------------------>
+        <table>
+            <thead>
+                <tr>
+                    <th>Equipment Name</th>
+                    <th>Model</th>
+                    <th>Servicing Interval</th>
+                    <th>Hospital</th>
+                </tr>
+            </thead>
+            <tbody id="equipments-table-body">
+            </tbody>
+        </table>
+
+        <button id="show-add-equipment-form-button" class="show-form-button" onclick="toggleFormVisibility(`add-equipment-form`)">Add Equipment</button>
+
+        <!-- <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe> -->
+        <form id="add-equipment-form" class="add-content-form">
+            <h3>Add New Equipment</h3>
+            <label for="equipment-name">Equipment Name</label>
+            <input type="text" id="equipment-name" name="name" required>
+            <br>
+            <label for="equipment-model">Model</label>
+            <input type="text" id="equipment-model" name="model" required>
+            <br>
+            <label for="equipment-servicing-period">Servicing Period</label>
+            <input type="text" id="equipment-servicing-period" name="servicing-period" required>
+            <br>
+            <label for="equipment-hospital-id">Hospital</label>
+            <input type="text" id="equipment-hospital-id" name="hospital-id" required>
+            <br>
+            <button type="submit" onclick="handleAddEquipmentsButton()">Add Equipment</button>
+        </form>
+        <script>
+           hideInputForms(); // Hide all input forms in the page
+           const equipmentsUrl = "/api/equipments"; // endpoint to get equipments list
+
+           // Retreives all equipments from api and displays them in a table
+           function getEquipments() {
+            fetch(equipmentsUrl)
+            .then(response => {
+                if (!response.ok){
+                    throw new Error(`HTTP Error: Status ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);
+                for (var i = 0; i < data.data.length; i++) {
+                    const equipmentsTableBody = document.getElementById("equipments-table-body")
+                    const newRow = document.createElement("tr")
+                    newRow.innerHTML = `                                                 
+                            <td>${data.data[i].name}</td>
+                            <td>${data.data[i].contact}</td>      
+                        `;
+                    // make the rows clickable to redirect to each equipments details
+                    newRow.setAttribute("data-href", `/api/equipments/details/${data.data[i].id}`)
+                    newRow.addEventListener("click", function () {
+                            window.location.href = this.dataset.href;
+                        });
+                    equipmentsTableBody.appendChild(newRow);
+                }
+            })
+            .catch(error => {
+                console.Error("error fetching equipments");
+            })
+           }
+
+            const equipmentsForm = document.getElementById("add-equipment-form");
+            equipmentsForm.addEventListener( 'submit', async (event) => {
+                    event.preventDefault();
+                })
+
+           async function handleAddEquipmentsButton() {
+                const equipmentsForm = document.getElementById("add-equipment-form");                
+                const formData = new FormData(equipmentsForm);
+
+                const jsonObject = Object.fromEntries(formData.entries())
+
+                const jsonString = JSON.stringify(jsonObject);
+                console.log(` form data ${jsonString}`);
+
+                await fetch ("/api/equipments",{
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: jsonString,
+                })
+                .then(response => {
+                    console.log(response.body)
+                    if (!response.ok) {
+                        throw new Error(`HTTP Error: Status ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then( body => {
+                    showSuccessMessage();
+                })
+                .catch( error => {
+                    console.error(`"error adding equipment: ${error}`);
+                    showFailedMessage();
+                })
+                window.location.href = "/index.html";
+                hideInputForms();
+           }
+           getEquipments();
+        </script>
+
+        <!------------------ ------------------------ ------------------>
+
+        <!------------------ Services Section ------------------>
+        <table>
+            <thead>
+                <tr>
+                    <th>Service Date</th>
+                    <th>Servicing Equipment</th>
+                    <th>Serviced By</th>
+                </tr>
+            </thead>
+            <tbody id="services-table-body">
+            </tbody>
+        </table>
+
+        <button id="show-add-service-form-button" class="show-form-button" onclick="toggleFormVisibility(`add-service-form`)">Add Service</button>
+
+        <form id="add-service-form" class="add-content-form">
+            <h3>Add New Service</h3>
+            <label for="service-date">Service Date</label>
+            <input type="date" id="service-date" name="date" required>
+            <br>
+            <label for="serviced-equipments">Equipments</label>
+            <input type="text" id="service-equipments" name="serviced-equipments" required>
+            <br>
+            <label for="serviced-engineers">Serviced By</label>
+            <input type="text" id="service-engineers" name="serviced-engineers" required>
+            <br>
+            <button type="submit" onclick="handleAddServicesButton()">Add Service</button>
+        </form>
+        <script>
+           hideInputForms(); // Hide all input forms in the page
+           const servicesUrl = "/api/services"; // endpoint to get services list
+
+           // Retreives all services from api and displays them in a table
+           function getServices() {
+            fetch(servicesUrl)
+            .then(response => {
+                if (!response.ok){
+                    throw new Error(`HTTP Error: Status ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);
+                for (var i = 0; i < data.data.length; i++) {
+                    const servicesTableBody = document.getElementById("services-table-body");
+                    const newRow = document.createElement("tr");
+                    newRow.innerHTML = `                                                 
+                            <td>${new Date(data.data[i].Date).toDateString()}</td>
+                            <td>${data.data[i].Equipments}</td>      
+                            <td>${data.data[i].Engineers}</td>      
+                        `;
+                    // make the rows clickable to redirect to each services details
+                    newRow.setAttribute("data-href", `/api/services/details/${data.data[i].id}`)
+                    newRow.addEventListener("click", function () {
+                            window.location.href = this.dataset.href;
+                        });
+                    servicesTableBody.appendChild(newRow);
+                }
+            })
+            .catch(error => {
+                console.Error("error fetching services");
+            })
+           }
+
+            const servicesForm = document.getElementById("add-service-form");
+            servicesForm.addEventListener( 'submit', async (event) => {
+                    event.preventDefault();
+                })
+
+           async function handleAddServicesButton() {
+                const servicesForm = document.getElementById("add-service-form");                
+                const formData = new FormData(servicesForm);
+
+                const jsonObject = Object.fromEntries(formData.entries());
+                jsonObject.date = new Date(jsonObject.date)
+
+                const jsonString = JSON.stringify(jsonObject);
+                console.log(` form data ${jsonString}`);
+
+                await fetch ("/api/services",{
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: jsonString,
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        try{
+                            const errorBody =  response.json();
+                            console.log (errorBody);                     
+                            throw new Error(`HTTP Error: Status ${response.status}, body: ${errorBody}`);
+                        }
+                        catch (error)  {
+                            console.log(error);
+                        }             
+                    }
+                    return response.json();
+                })
+                .then( body => {
+                    showSuccessMessage();
+                })
+                .catch( error => {
+                    console.error(`"error adding service: ${error}`);
+                    showFailedMessage();
+                })
+                // window.location.href = "/index.html";
+                hideInputForms();
+           }
+           getServices();
+        </script>
+
+        <!------------------ ------------------------ ------------------>
         
         <p>For more information, please refer to the documentation.</p>
         <p>Version: 1.0.0</p>
@@ -209,4 +602,5 @@
         <p>&copy; 2025 MQS. All rights reserved.</p>
     </div>
 </body>
+<script src="/script.js"></script>
 </html>
