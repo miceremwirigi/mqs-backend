@@ -17,30 +17,29 @@
         <div id="success-popup">Success</div>
         <div id="failed-popup">Failed</div>
 
-        <h3 style="color: black;">Equipment Name: {{.name}}</h3>
-        <h3 style="color: black;">Model: {{.model}}</h3>
-        <h3 style="color: black;">ServicingPeriod: {{.servicing-period}}</h3>
-        <h3 style="color: black;">Hospital: {{.hospital-id}}</h3>
-
-
-
+        <h3 style="color: black;">Equipment Name: {{.Name}}</h3>
+        <h3 style="color: black;">Model: {{.Model}}</h3>
+        <h3 style="color: black;">ServicingPeriod: {{.ServicingPeriod}}</h3>
+        <h3 style="color: black;">Hospital: {{.Hospital.Name}}</h3>
 
 
 
         <!-- <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe> -->
         <form id="update-equipment-form" class="add-content-form">
-            <h3>Add New Equipment</h3>
+            <h3>Update Equipment</h3>
             <label for="equipment-name">Equipment Name</label>
-            <input type="text" id="equipment-name" name="name" value="{{.name}}" required>
+            <input type="text" id="equipment-name" name="name" value="{{.Name}}" required>
             <br>
             <label for="equipment-model">Model</label>
-            <input type="text" id="equipment-model" name="model" value="{{.model}}" required>
+            <input type="text" id="equipment-model" name="model" value="{{.Model}}" required>
             <br>
             <label for="equipment-servicing-period">Servicing Period</label>
-            <input type="text" id="equipment-servicing-period" name="servicing-period" value="{{.servicing-period}}" required>
+            <input type="text" id="equipment-servicing-period" name="servicing-period" value="{{.ServicingPeriod}}" required>
             <br>
             <label for="equipment-hospital-id">Hospital</label>
-            <input type="text" id="equipment-hospital-id" name="hospital-id" value="{{.hospital-id}}" required>
+            <select id="equipment-hospital-id" name="hospital_id" required>
+                <option value="{{.Hospital.id}}">{{.Hospital.Name}}</option>
+            </select>
             <br>
             <button type="submit" onclick="handleUpdateFormSubmit()">Update Equipment</button>
         </form>
@@ -112,7 +111,7 @@
                     console.error(`"error updating equipment: ${error}`);
                     showFailedMessage();
                 })
-                // window.location.href = "/api/equipments/details/{{.id}}";
+                window.location.href = "/api/equipments/details/{{.id}}";
                 hideInputForms();
             }
 

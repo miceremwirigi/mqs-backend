@@ -185,6 +185,7 @@
             <button type="submit" onclick="handleAddHospitalsButton()">Add Hospital</button>
         </form>
         <script>
+            var allHospitals = new Array
            hideInputForms(); // Hide all input forms in the page
            const hospitalsUrl = "/api/hospitals"; // endpoint to get hospitals list
 
@@ -214,6 +215,7 @@
                             window.location.href = this.dataset.href;
                         });
                     hospitalsTableBody.appendChild(newRow);
+                    allHospitals = data.data
                 }
             })
             .catch(error => {
@@ -290,6 +292,7 @@
             <button type="submit" onclick="handleAddEngineersButton()">Add Engineer</button>
         </form>
         <script>
+            var allEngineers = new Array
            hideInputForms(); // Hide all input forms in the page
            const engineersUrl = "/api/engineers"; // endpoint to get engineers list
 
@@ -316,8 +319,9 @@
                     newRow.addEventListener("click", function () {
                             window.location.href = this.dataset.href;
                         });
-                    engineersTableBody.appendChild(newRow);
+                    engineersTableBody.appendChild(newRow);                    
                 }
+                allEngineers = data.data
             })
             .catch(error => {
                 console.Error("error fetching engineers");
@@ -395,14 +399,17 @@
             <input type="text" id="equipment-model" name="model" required>
             <br>
             <label for="equipment-servicing-period">Servicing Period</label>
-            <input type="text" id="equipment-servicing-period" name="servicing-period" required>
+            <input type="text" id="equipment-servicing-period" name="servicing_period" required>
             <br>
             <label for="equipment-hospital-id">Hospital</label>
-            <input type="text" id="equipment-hospital-id" name="hospital-id" required>
+            <select id="equipment-hospital-id" name="hospital_id" required>
+            </select>
             <br>
             <button type="submit" onclick="handleAddEquipmentsButton()">Add Equipment</button>
         </form>
         <script>
+
+            var allEquipments = new Array;
            hideInputForms(); // Hide all input forms in the page
            const equipmentsUrl = "/api/equipments"; // endpoint to get equipments list
 
@@ -421,8 +428,10 @@
                     const equipmentsTableBody = document.getElementById("equipments-table-body")
                     const newRow = document.createElement("tr")
                     newRow.innerHTML = `                                                 
-                            <td>${data.data[i].name}</td>
-                            <td>${data.data[i].contact}</td>      
+                            <td>${data.data[i].Name}</td>
+                            <td>${data.data[i].Model}</td>      
+                            <td>${data.data[i].ServicingPeriod}</td>      
+                            <td>${data.data[i].Hospital.Name}</td>      
                         `;
                     // make the rows clickable to redirect to each equipments details
                     newRow.setAttribute("data-href", `/api/equipments/details/${data.data[i].id}`)
@@ -431,6 +440,7 @@
                         });
                     equipmentsTableBody.appendChild(newRow);
                 }
+                allEquipments = data.data
             })
             .catch(error => {
                 console.Error("error fetching equipments");
@@ -441,6 +451,23 @@
             equipmentsForm.addEventListener( 'submit', async (event) => {
                     event.preventDefault();
                 })
+
+            const equipmentHospitalIDsSelect = document.getElementById("equipment-hospital-id");
+            equipmentHospitalIDsSelect.addEventListener("focus", async (event) => {
+
+                for (const index in allHospitals) {                    
+                    if (Object.prototype.hasOwnProperty.call(allHospitals, index)) {
+                        // const element = object[index];
+                        newOption = document.createElement('option');
+                        newOption.value = allHospitals[index].id;
+                        newOption.innerHTML = `
+                            ${allHospitals[index].Name}
+                        `;
+                    equipmentHospitalIDsSelect.appendChild(newOption);
+                        
+                    }
+                }
+            } )
 
            async function handleAddEquipmentsButton() {
                 const equipmentsForm = document.getElementById("add-equipment-form");                
@@ -500,11 +527,13 @@
             <label for="service-date">Service Date</label>
             <input type="date" id="service-date" name="date" required>
             <br>
-            <label for="serviced-equipments">Equipments</label>
-            <input type="text" id="service-equipments" name="serviced-equipments" required>
+            <label for="service-equipments">Equipments</label>
+            <select id="service-equipments" name="equipments" required multiple>
+            </select>
             <br>
-            <label for="serviced-engineers">Serviced By</label>
-            <input type="text" id="service-engineers" name="serviced-engineers" required>
+            <label for="service-engineers">Serviced By</label>
+            <select type="text" id="service-engineers" name="engineers" multiple>
+            </select>
             <br>
             <button type="submit" onclick="handleAddServicesButton()">Add Service</button>
         </form>
@@ -517,7 +546,9 @@
             fetch(servicesUrl)
             .then(response => {
                 if (!response.ok){
-                    throw new Error(`HTTP Error: Status ${response.status}`);
+                    return response.text().then((text) =>{
+                        throw new Error(`HTTP Error: Status ${response.status}: ${text}`);
+                    })                    
                 }
                 return response.json();
             })
@@ -526,9 +557,17 @@
                 for (var i = 0; i < data.data.length; i++) {
                     const servicesTableBody = document.getElementById("services-table-body");
                     const newRow = document.createElement("tr");
+                    let listOfEquipments = ""
+                    data.data[i].Equipments.forEach(equipment => {
+                        listOfEquipments = listOfEquipments + equipment.Name + "-" + equipment.Hospital.Name + ", ";
+                    });
+                    let listOfEngineers = ""
+                    data.data[i].Engineers.forEach(engineer => {
+                        listOfEngineers = listOfEngineers + engineer.Name + ", ";
+                    });
                     newRow.innerHTML = `                                                 
                             <td>${new Date(data.data[i].Date).toDateString()}</td>
-                            <td>${data.data[i].Equipments}</td>      
+                            <td>${listOfEquipments}</td>      
                             <td>${data.data[i].Engineers}</td>      
                         `;
                     // make the rows clickable to redirect to each services details
@@ -540,18 +579,77 @@
                 }
             })
             .catch(error => {
-                console.Error("error fetching services");
+                console.Error("error fetching services:", error.message);
             })
            }
 
+           // event to prevent form default submission
             const servicesForm = document.getElementById("add-service-form");
             servicesForm.addEventListener( 'submit', async (event) => {
                     event.preventDefault();
                 })
+       
+            // Event to list available equipment options on the form
+            const servicedEquipmentsIDsSelect = document.getElementById("service-equipments");
+            servicedEquipmentsIDsSelect.addEventListener("focus", async (event) => {
+
+                for (const index in allEquipments) {                    
+                    if (Object.prototype.hasOwnProperty.call(allEquipments, index)) {
+                        // const element = object[index];
+                        newOption = document.createElement('option');
+                        newOption.value = allEquipments[index].id;
+                        newOption.innerHTML = `
+                            ${allEquipments[index].Name} - ${allEquipments[index].Hospital.Name}
+                        `;
+                    servicedEquipmentsIDsSelect.appendChild(newOption);
+                        
+                    }
+                }
+            })
+
+            // Event to list available engineer options on the form
+            const serviceEngineersIDsSelect = document.getElementById("service-engineers");
+            serviceEngineersIDsSelect.addEventListener("focus", async (event) => {
+
+                for (const index in allEngineers) {                    
+                    if (Object.prototype.hasOwnProperty.call(allEngineers, index)) {
+                        // const element = object[index];
+                        newOption = document.createElement('option');
+                        newOption.value = allEngineers[index].id;
+                        newOption.innerHTML = `
+                            ${allEngineers[index].name}
+                        `;
+                    serviceEngineersIDsSelect.appendChild(newOption);
+                        
+                    }
+                }
+            })
 
            async function handleAddServicesButton() {
                 const servicesForm = document.getElementById("add-service-form");                
                 const formData = new FormData(servicesForm);
+
+                // Handle equipments options selection in service form
+                var selectedEquipmentOptions = [];
+                var selectEquipmentElement = document.getElementById("service-equipments");
+                for (var i = 0; i < selectEquipmentElement.options.length; i++) {
+                    if (selectEquipmentElement.options[i].selected) {
+                        selectedEquipmentOptions.push(selectEquipmentElement.options[i].value);
+                    }
+                }
+                console.log(selectedEquipmentOptions)
+                formData.set("equipments", selectedEquipmentOptions.join(','))
+
+                // Handle engineer options selection in service form
+                var selectedEngineerOptions = [];
+                var selectEngineerElement = document.getElementById("service-engineers");
+                for (var i = 0; i < selectEngineerElement.options.length; i++) {
+                    if (selectEngineerElement.options[i].selected) {
+                        selectedEngineerOptions.push(selectEngineerElement.options[i].value);
+                    }
+                }
+                console.log(selectedEngineerOptions)
+                formData.set("engineers", selectedEngineerOptions.join(','))
 
                 const jsonObject = Object.fromEntries(formData.entries());
                 jsonObject.date = new Date(jsonObject.date)
@@ -568,14 +666,10 @@
                 })
                 .then(response => {
                     if (!response.ok) {
-                        try{
-                            const errorBody =  response.json();
-                            console.log (errorBody);                     
-                            throw new Error(`HTTP Error: Status ${response.status}, body: ${errorBody}`);
-                        }
-                        catch (error)  {
-                            console.log(error);
-                        }             
+                        return response.text().then((text) =>{
+                            console.log (text);                     
+                            throw new Error(`HTTP Error: Status ${response.status}, body: ${text}`);
+                        })        
                     }
                     return response.json();
                 })
@@ -583,7 +677,7 @@
                     showSuccessMessage();
                 })
                 .catch( error => {
-                    console.error(`"error adding service: ${error}`);
+                    console.error(`"error adding service: ${error} :`, error.message);
                     showFailedMessage();
                 })
                 // window.location.href = "/index.html";

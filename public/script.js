@@ -1,3 +1,8 @@
+var allHospitals = new Array;
+var allEngineers = new Array;
+var allEquipment = new Array;
+var allServices = new Array;
+
 // set form visibility toggle
 function toggleFormVisibility(formId) {
     const form = document.getElementById(formId);
