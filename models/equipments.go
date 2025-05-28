@@ -1,8 +1,6 @@
 package models
 
 import (
-	"time"
-
 	"github.com/google/uuid"
 )
 
@@ -10,7 +8,8 @@ type Equipment struct {
 	BaseModel
 	Name            string
 	Model           string
-	ServicingPeriod time.Month
+	ServicingPeriod int
 	HospitalID      uuid.UUID
 	Hospital        Hospital
+	Services        []*Service `gorm:"many2many:serviced_equipments;"`
 }

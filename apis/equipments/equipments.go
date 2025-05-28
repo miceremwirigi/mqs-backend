@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"strconv"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 	"github.com/miceremwirigi/mqs-backend/common"
 	"github.com/miceremwirigi/mqs-backend/common/apis"
 	"github.com/miceremwirigi/mqs-backend/models"
@@ -19,7 +21,7 @@ func (h *Handler) GetAllEquipments(c fiber.Ctx) error {
 	}
 
 	var equipments []models.Equipment
-	err := tx.Find(&equipments).Error
+	err := tx.Preload("Hospital").Find(&equipments).Error
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error getting equipments", err)
@@ -45,7 +47,7 @@ func (h *Handler) GetEquipment(c fiber.Ctx) error {
 	id := c.Params("id")
 
 	var equipment models.Equipment
-	err := tx.Where("id = ?", id).Find(&equipment).Error
+	err := tx.Preload("Hospital").Where("id = ?", id).Find(&equipment).Error
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error retreiving equipment", err)
@@ -71,7 +73,7 @@ func (h *Handler) GetEquipmentHtml(c fiber.Ctx) error {
 	id := c.Params("id")
 
 	var equipment models.Equipment
-	err := tx.Where("id = ?", id).Find(&equipment).Error
+	err := tx.Preload("Hospital").Where("id = ?", id).Find(&equipment).Error
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error retreiving equipment", err)
@@ -102,9 +104,9 @@ func (h *Handler) AddEquipment(c fiber.Ctx) error {
 			"failed to begin transaction", tx.Error.Error())
 	}
 
-	equipment := &models.Equipment{}
+	equipment := models.Equipment{}
 
-	err := json.Unmarshal(c.Body(), equipment)
+	err := json.Unmarshal(c.Body(), &equipment)
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
 			"error binding body to struct", err.Error())
@@ -115,10 +117,37 @@ func (h *Handler) AddEquipment(c fiber.Ctx) error {
 			"error binding body to struct", errors.New("error: empty equipment name"))
 	}
 
-	err = tx.Create(equipment).Error
+	var dedodedJsonString map[string]string
+	err = json.Unmarshal(c.Body(), &dedodedJsonString)
+	if err != nil {
+		log.Println("error decoding json to string")
+		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
+			"error decoding json to string", errors.New("error: error decoding json to string"))
+	}
+	// convert json strings to struc field types before create
+	for key, value := range dedodedJsonString {
+		if key == "servicing_period" {
+			equipment.ServicingPeriod, err = strconv.Atoi(value)
+			if err != nil {
+				log.Println("error converting servicing period string to int")
+				return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
+					"eerror converting servicing period string to int", errors.New("error: error converting servicing period string to int"))
+			}
+		}
+		if key == "hospital_id" {
+			equipment.HospitalID, err = uuid.ParseBytes([]byte(value))
+			if err != nil {
+				log.Println("error converting hospital_id string to uuid")
+				return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
+					"error converting hospital_id string to uuid", errors.New("error: error converting hospital_id string to uuid"))
+			}
+		}
+	}
+
+	err = tx.Create(&equipment).Error
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
-			"error committing database transaction", err.Error())
+			"error commit creating equipment", err.Error())
 	}
 
 	err = tx.Commit().Error

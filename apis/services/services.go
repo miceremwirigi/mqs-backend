@@ -3,7 +3,10 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
+	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/miceremwirigi/mqs-backend/common"
@@ -19,7 +22,8 @@ func (h *Handler) GetAllServices(c fiber.Ctx) error {
 	}
 
 	var services []models.Service
-	err := tx.Find(&services).Error
+	err := tx.Model(&services).Preload("Equipments").
+		Preload("Equipments").Preload("Equipments.Hospital").Preload("Engineers").Find(&services).Error
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error getting services", err)
@@ -45,7 +49,7 @@ func (h *Handler) GetService(c fiber.Ctx) error {
 	id := c.Params("id")
 
 	var service models.Service
-	err := tx.Where("id = ?", id).Find(&service).Error
+	err := tx.Preload("Equipments").Preload("Equipments.Hospital").Where("id = ?", id).Find(&service).Error
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error retreiving service", err)
@@ -71,7 +75,7 @@ func (h *Handler) GetServiceHtml(c fiber.Ctx) error {
 	id := c.Params("id")
 
 	var service models.Service
-	err := tx.Where("id = ?", id).Find(&service).Error
+	err := tx.Preload("Equipments").Preload("Equipments.Hospital").Where("id = ?", id).Find(&service).Error
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error retreiving service", err)
@@ -103,11 +107,60 @@ func (h *Handler) AddService(c fiber.Ctx) error {
 	}
 
 	service := &models.Service{}
+	// equipments := []models.Equipment{}
+	// endineers := []models.Engineers{}
 
-	err := json.Unmarshal(c.Body(), service)
+	// err := json.Unmarshal(c.Body(), service)
+	// if err != nil {
+	// 	return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
+	// 		"error binding body to struct", err.Error())
+	// }
+
+	var dedodedJsonString map[string]string
+	err := json.Unmarshal(c.Body(), &dedodedJsonString)
 	if err != nil {
+		log.Println("error decoding json to string")
 		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
-			"error binding body to struct", err.Error())
+			"error decoding json to string", errors.New("error: error decoding json to string"))
+	}
+	// convert json strings to struc field types before create
+	for key, value := range dedodedJsonString {
+		switch key {
+		case "date":
+			service.Date, err = time.Parse("2006-01-02T15:04:05.999999999Z07:00", value)
+			if err != nil {
+				return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
+					"error converting string to date", errors.New("error: cannot convert string to date"))
+			}
+		case "equipments":
+			equipments := []*models.Equipment{}
+			equipmentIDs := strings.Split(value, ",")
+			for _, equipment_id := range equipmentIDs {
+				equipment := models.Equipment{}
+				tx.First(&equipment, "id = ?", equipment_id)
+				fmt.Println(equipment)
+				equipments = append(equipments, &equipment)
+			}
+			service.Equipments = equipments
+		case "engineers":
+			fmt.Println(value)
+		}
+		// if key == "servicing_period" {
+		// 	equipment.ServicingPeriod, err = strconv.Atoi(value)
+		// 	if err != nil {
+		// 		log.Println("error converting servicing period string to int")
+		// 		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
+		// 			"eerror converting servicing period string to int", errors.New("error: error converting servicing period string to int"))
+		// 	}
+		// }
+		// if key == "hospital_id" {
+		// 	equipment.HospitalID, err = uuid.ParseBytes([]byte(value))
+		// 	if err != nil {
+		// 		log.Println("error converting hospital_id string to uuid")
+		// 		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
+		// 			"error converting hospital_id string to uuid", errors.New("error: error converting hospital_id string to uuid"))
+		// 	}
+		// }
 	}
 
 	if service.Date.IsZero() {
