@@ -10,123 +10,186 @@
 <body>
     <div class="header">
         <h1 class="title">MQS Inc.</h1>
-        <h2 class="subtitle">Medical Service Service Sheduling</h2>
+        <h2 class="subtitle">Medical Service Service Scheduling</h2>
     </div>
-    </div class="content"> 
 
+    <div class="content">
         <div id="success-popup">Success</div>
         <div id="failed-popup">Failed</div>
+        <div id="services-section" class="main-section">
+            <h3 style="color: black;">Service Date: <span id="service-date-display"></span></h3>
+            <h3 style="color: black;">Equipments: 
+                {{if .Equipments}}
+                    {{range $i, $e := .Equipments}}{{if $i}}, {{end}}{{$e.Name}}{{end}}
+                {{else}}
+                    None
+                {{end}}
+            </h3>
+            <h3 style="color: black;">Engineers: 
+                {{if .Engineers}}
+                    {{range $i, $e := .Engineers}}{{if $i}}, {{end}}{{$e.name}}{{end}}
+                {{else}}
+                    None
+                {{end}}
+            </h3>
 
-        <h3 style="color: black;">Service Date: {{.name}}</h3>
-        <h3 style="color: black;">Equipments: {{.equipments}}</h3>
-        <h3 style="color: black;">Engineers: {{.engineers}}</h3>
+            <form id="update-service-form" class="add-content-form">
+                <h3>Edit Service</h3>
+                <label for="service-date">Service Date</label>
+                <input type="date" id="service-date" name="date" required>
+                <br>
+                <label for="service-equipments">Equipments</label>
+                <select id="service-equipments" name="equipments" required multiple></select>
+                <br>
+                <label for="service-engineers">Serviced By</label>
+                <select id="service-engineers" name="engineers" multiple></select>
+                <br>
+                <button type="submit">Update Service</button>
+            </form>
 
-        <form id="update-service-form" class="add-content-form">
-            <h3>Add New Service</h3>
-            <label for="service-date">Service Date</label>
-            <input type="date" id="service-date" name="date" value="{{.date}}" required>
-            <br>
-            <label for="service-equipments">Equipments</label>
-            <input type="text" id="service-equipments" name="equipments" value="{{.equipments}}" required>
-            <br>
-            <label for="service-engineers">Serviced By</label>
-            <input type="text" id="service-engineers" name="engineers" value="{{.engineers}}" required>
-            <br>
-            <button type="submit" onclick="handleUpdateFormSubmit()">Update Service</button>
-        </form>
+            <span>
+                <button onclick="document.location='../../../index.html'">Back</button>
+                <button onclick="toggleFormVisibility('update-service-form')">Edit</button>
+                <button onclick="deleteService()">Delete</button>
+            </span>
 
-        <span>
-            <button onclick="document.location='../../../index.html'">Back</button>
-            <button onclick="toggleFormVisibility(`update-service-form`)">Edit</button>
-            <button onclick="deleteService()">Delete</button>
-        </span>
-
-        <script>
-            const form = document.getElementById("update-service-form");
-            form.addEventListener( 'submit', async (event) => {
-                    event.preventDefault();
-                })
-
-            deleteServiceUrl = "/api/services/delete/{{.id}}";
-            function deleteService() {
-                fetch(deleteServiceUrl,{
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                })
-                .then(response => {
-                    if (!response.ok){
-                    throw new Error(`HTTP Error: Status ${response.status}`);
-                }
-                    return response.json();
-                })
-                .then(data => {
-                    
-                    showSuccessMessage();
-                    window.location.href = "/index.html";
-                })
-                .catch(error => {
-                    console.Error("error fetching services");
-                    showFailedMessage();
-                })
-            }
-
-            async function handleUpdateFormSubmit() {
-                const form = document.getElementById("update-service-form");                
-                const formData = new FormData(form);
-
-                const jsonObject = Object.fromEntries(formData.entries())
-
-                const jsonString = JSON.stringify(jsonObject);
-                console.log(`form data ${jsonString}`);
-
-                await fetch ("/api/services/{{.id}}",{
-                    method: "PUT",
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: jsonString,
-                })
-                .then(response => {
-                    console.log(response)
-                    if (!response.ok) {
-                        throw new Error(`HTTP Error: Status ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then( body => {
-                    showSuccessMessage();
-                })
-                .catch( error => {
-                    console.error(`"error updating service: ${error}`);
-                    showFailedMessage();
-                })
-                // window.location.href = "/api/services/details/{{.id}}";
+            <script>
+                console.log("Service object received: {{.}}");
                 hideInputForms();
-            }
+                // Fetch all equipments and engineers for select options
+                let allEquipments = [];
+                const equipmentsUrl = "/api/equipments";
+                const engineersUrl = "/api/engineers";
 
-            function showSuccessMessage() {
-                const popup = document.getElementById('success-popup');
-                popup.style.display = 'block';
-                setTimeout(function() {
-                    popup.style.display = 'none';
-                }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
-            }
+                function populateEquipmentsSelect(selectedEquipments) {
+                    const select = document.getElementById("service-equipments");
+                    select.innerHTML = '';
+                    allEquipments.forEach(eq => {
+                        const option = document.createElement('option');
+                        option.value = eq.id;
+                        option.textContent = eq.Name;
+                        if (selectedEquipments && selectedEquipments.includes(eq.id)) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+                }
+                function populateEngineersSelect(selectedEngineers) {
+                    const select = document.getElementById("service-engineers");
+                    select.innerHTML = '';
+                    allEngineers.forEach(eng => {
+                        const option = document.createElement('option');
+                        option.value = eng.id;
+                        option.textContent = eng.name;
+                        if (selectedEngineers && selectedEngineers.includes(eng.id)) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+                }
+                // Fetch and populate on page load
+                fetch(equipmentsUrl)
+                    .then(res => res.json())
+                    .then(data => {
+                        allEquipments = data.data || [];
+                        // Optionally parse selected equipments from template variable
+                        populateEquipmentsSelect("{{.Equipments}}");
+                    });
+                fetch(engineersUrl)
+                    .then(res => res.json())
+                    .then(data => {
+                        allEngineers = data.data || [];
+                        populateEngineersSelect("{{.Engineers}}");
+                    });
 
-            function showFailedMessage() {
-                const popup = document.getElementById('failed-popup');
-                popup.style.display = 'block';
-                setTimeout(function() {
-                    popup.style.display = 'none';
-                }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
-            }
-        </script>
-          
-        <p>For more information, please refer to the documentation.</p>
-        <p>Version: 1.0.0</p>
+                // Format and display only the date part from .Date using JS
+                document.addEventListener('DOMContentLoaded', function() {
+                    var dateRaw = "{{.Date}}";
+                    var dateOnly = dateRaw ? dateRaw.split('T')[0] : '';
+                    console.log(`Parsed date: ${dateOnly}`);
+                    document.getElementById('service-date').value = dateOnly; // Set the input value
+                    // Format the date for display
+                    var formatted = 'None';
+                    if (dateOnly) {
+                        var dateObj = new Date(dateOnly);
+                        formatted = dateObj.toDateString(); // e.g., Thu Apr 10 2025
+                    }
+                    document.getElementById('service-date-display').textContent = formatted;
+                });
+
+                document.getElementById("update-service-form").addEventListener("submit", handleUpdateFormSubmit);
+
+                // Update Service logic
+                async function handleUpdateFormSubmit(event) {
+                    event.preventDefault();
+                    const form = document.getElementById("update-service-form");
+                    const formData = new FormData(form);
+                    // Convert multiple selects to array
+                    const equipments = Array.from(document.getElementById('service-equipments').selectedOptions).map(opt => opt.value);
+                    const engineers = Array.from(document.getElementById('service-engineers').selectedOptions).map(opt => opt.value);
+
+                    formData.set("equipments", equipments.join(','))
+                    formData.set("engineers", engineers.join(','))
+                    const jsonObject = Object.fromEntries(formData.entries());
+                    // Reformat date to RFC3339 (2006-01-02T15:04:05Z07:00) if present
+                    if (jsonObject.date) {
+                        // If already in YYYY-MM-DD, convert to RFC3339 (YYYY-MM-DDT00:00:00Z)
+                        const dateObj = new Date(jsonObject.date);
+                        jsonObject.date = dateObj.toISOString(); // RFC3339 format
+                    }
+                    
+                    const jsonString = JSON.stringify(jsonObject);
+                    await fetch ("/api/services/{{.id}}",{
+                        method: "PUT",
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: jsonString,
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP Error: Status ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then( body => {
+                        showSuccessMessage();
+                    })
+                    .catch( error => {
+                        console.error(`error updating service: ${error}`);
+                        showFailedMessage();
+                    })
+                    hideInputForms();
+                }
+
+                // Delete Service logic
+                function deleteService() {
+                    fetch("/api/services/delete/{{.id}}",{
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                    .then(response => {
+                        if (!response.ok){
+                            throw new Error(`HTTP Error: Status ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        showSuccessMessage();
+                        window.location.href = "/index.html";
+                    })
+                    .catch(error => {
+                        console.error("error deleting service");
+                        showFailedMessage();
+                    })
+                }
+            </script>
+            <p>For more information, please refer to the documentation.</p>
+            <p>Version: 1.0.0</p>
+        </div>
     </div>
-
     <div class="footer">
         <p>&copy; 2025 MQS. All rights reserved.</p>
     </div>

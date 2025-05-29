@@ -10,6 +10,6 @@ type Equipment struct {
 	Model           string
 	ServicingPeriod int
 	HospitalID      uuid.UUID
-	Hospital        Hospital
+	Hospital        Hospital   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Services        []*Service `gorm:"many2many:serviced_equipments;"`
 }

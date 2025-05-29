@@ -28,7 +28,7 @@ func RegisterRoutes(app *fiber.App, db *gorm.DB) {
 	}
 
 	hospitalsRoutes.Post("/", hospitalHandler.AddHospital)
-	hospitalsRoutes.Get("/", nil, hospitalHandler.GetAllHospitals)
+	hospitalsRoutes.Get("/", hospitalHandler.GetAllHospitals)
 	hospitalsRoutes.Get("/:id", hospitalHandler.GetHospital)
 	hospitalsRoutes.Get("/details/:id", hospitalHandler.GetHospitalHtml)
 	hospitalsRoutes.Put("/:id", hospitalHandler.UpdateHospital)
@@ -41,7 +41,7 @@ func RegisterRoutes(app *fiber.App, db *gorm.DB) {
 	}
 
 	engineersRoutes.Post("/", engineerHandler.AddEngineer)
-	engineersRoutes.Get("/", nil, engineerHandler.GetAllEngineers)
+	engineersRoutes.Get("/", engineerHandler.GetAllEngineers)
 	engineersRoutes.Get("/:id", engineerHandler.GetEngineer)
 	engineersRoutes.Get("/details/:id", engineerHandler.GetEngineerHtml)
 	engineersRoutes.Put("/:id", engineerHandler.UpdateEngineer)
@@ -54,7 +54,7 @@ func RegisterRoutes(app *fiber.App, db *gorm.DB) {
 	}
 
 	equipmentsRoutes.Post("/", equipmentHandler.AddEquipment)
-	equipmentsRoutes.Get("/", nil, equipmentHandler.GetAllEquipments)
+	equipmentsRoutes.Get("/", equipmentHandler.GetAllEquipments)
 	equipmentsRoutes.Get("/:id", equipmentHandler.GetEquipment)
 	equipmentsRoutes.Get("/details/:id", equipmentHandler.GetEquipmentHtml)
 	equipmentsRoutes.Put("/:id", equipmentHandler.UpdateEquipment)
@@ -67,7 +67,7 @@ func RegisterRoutes(app *fiber.App, db *gorm.DB) {
 	}
 
 	servicesRoutes.Post("/", serviceHandler.AddService)
-	servicesRoutes.Get("/", nil, serviceHandler.GetAllServices)
+	servicesRoutes.Get("/", serviceHandler.GetAllServices)
 	servicesRoutes.Get("/:id", serviceHandler.GetService)
 	servicesRoutes.Get("/details/:id", serviceHandler.GetServiceHtml)
 	servicesRoutes.Put("/:id", serviceHandler.UpdateService)

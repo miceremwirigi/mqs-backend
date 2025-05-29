@@ -75,7 +75,8 @@ func (h *Handler) GetServiceHtml(c fiber.Ctx) error {
 	id := c.Params("id")
 
 	var service models.Service
-	err := tx.Preload("Equipments").Preload("Equipments.Hospital").Where("id = ?", id).Find(&service).Error
+	err := tx.Preload("Equipments").Preload("Equipments.Hospital").
+		Preload("Engineers").Where("id = ?", id).Find(&service).Error
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error retreiving service", err)
@@ -138,12 +139,21 @@ func (h *Handler) AddService(c fiber.Ctx) error {
 			for _, equipment_id := range equipmentIDs {
 				equipment := models.Equipment{}
 				tx.First(&equipment, "id = ?", equipment_id)
-				fmt.Println(equipment)
 				equipments = append(equipments, &equipment)
 			}
 			service.Equipments = equipments
 		case "engineers":
-			fmt.Println(value)
+			engineers := []*models.Engineer{}
+			engineerIDs := strings.Split(value, ",")
+			for _, engineer_id := range engineerIDs {
+				engineer := models.Engineer{}
+				tx.First(&engineer, "id = ?", engineer_id)
+				fmt.Println(engineer)
+				engineers = append(engineers, &engineer)
+			}
+			service.Engineers = engineers
+		default:
+			fmt.Println(key + ": " + value)
 		}
 		// if key == "servicing_period" {
 		// 	equipment.ServicingPeriod, err = strconv.Atoi(value)
@@ -193,25 +203,79 @@ func (h *Handler) UpdateService(c fiber.Ctx) error {
 
 	id := c.Params("id")
 
-	service := &models.Service{}
-	err := json.Unmarshal(c.Body(), service)
+	// 1. Fetch the existing service
+	var service models.Service
+	if err := tx.Preload("Equipments").Preload("Engineers").First(&service, "id = ?", id).Error; err != nil {
+		tx.Rollback()
+		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
+			"service not found", err.Error())
+	}
+
+	var dedodedJsonString map[string]string
+	err := json.Unmarshal(c.Body(), &dedodedJsonString)
 	if err != nil {
+		log.Println("error decoding json to string")
+		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
-			"error binding body to struct", err.Error())
+			"error decoding json to string", errors.New("error: error decoding json to string"))
+	}
+
+	for key, value := range dedodedJsonString {
+		switch key {
+		case "date":
+			service.Date, err = time.Parse("2006-01-02T15:04:05.999999999Z07:00", value)
+			if err != nil {
+				tx.Rollback()
+				return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
+					"error converting string to date", errors.New("error: cannot convert string to date"))
+			}
+		case "equipments":
+			equipments := []*models.Equipment{}
+			equipmentIDs := strings.Split(value, ",")
+			for _, equipment_id := range equipmentIDs {
+				equipment := models.Equipment{}
+				tx.First(&equipment, "id = ?", equipment_id)
+				equipments = append(equipments, &equipment)
+			}
+			// Use GORM's Association().Replace()
+			if err := tx.Model(&service).Association("Equipments").Replace(equipments); err != nil {
+				tx.Rollback()
+				return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
+					"error updating equipments", err.Error())
+			}
+		case "engineers":
+			engineers := []*models.Engineer{}
+			engineerIDs := strings.Split(value, ",")
+			for _, engineer_id := range engineerIDs {
+				engineer := models.Engineer{}
+				tx.First(&engineer, "id = ?", engineer_id)
+				engineers = append(engineers, &engineer)
+			}
+			// Use GORM's Association().Replace()
+			if err := tx.Model(&service).Association("Engineers").Replace(engineers); err != nil {
+				tx.Rollback()
+				return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
+					"error updating engineers", err.Error())
+			}
+		default:
+			fmt.Println(key + ": " + value)
+		}
 	}
 
 	if service.Date.IsZero() {
+		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
 			"error binding body to struct", errors.New("error: empty service name"))
 	}
-	err = tx.Where("id = ?", id).Updates(service).Error
-	if err != nil {
+
+	// Save the updated date (and any other scalar fields)
+	if err := tx.Model(&service).Updates(service).Error; err != nil {
+		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
 			"error committing database transaction on service update", err.Error())
 	}
 
-	err = tx.Commit().Error
-	if err != nil {
+	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error committing transaction", err.Error())
@@ -219,7 +283,7 @@ func (h *Handler) UpdateService(c fiber.Ctx) error {
 
 	log.Println("Updating Service ...")
 
-	return apis.GeneralApiResponse(c, apis.StatusOkResponseCode, "successfully uptdated service", &service)
+	return apis.GeneralApiResponse(c, apis.StatusOkResponseCode, "successfully updated service", &service)
 }
 
 func (h *Handler) DeleteService(c fiber.Ctx) error {
@@ -232,6 +296,17 @@ func (h *Handler) DeleteService(c fiber.Ctx) error {
 	id := c.Params("id")
 
 	service := &models.Service{}
+	// First, delete related records in the join tables to avoid foreign key constraint errors
+	if err := tx.Exec("DELETE FROM serviced_equipments WHERE service_id = ?", id).Error; err != nil {
+		tx.Rollback()
+		return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
+			"error deleting related serviced_equipments", err.Error())
+	}
+	if err := tx.Exec("DELETE FROM serviced_by WHERE service_id = ?", id).Error; err != nil {
+		tx.Rollback()
+		return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
+			"error deleting related serviced_by", err.Error())
+	}
 	err := tx.Where("id = ?", id).Delete(service).Error
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,

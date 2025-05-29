@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
@@ -21,7 +22,7 @@ func (h *Handler) GetAllEquipments(c fiber.Ctx) error {
 	}
 
 	var equipments []models.Equipment
-	err := tx.Preload("Hospital").Find(&equipments).Error
+	err := tx.Preload("Hospital").Preload("Services").Find(&equipments).Error
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error getting equipments", err)
@@ -169,25 +170,56 @@ func (h *Handler) UpdateEquipment(c fiber.Ctx) error {
 
 	id := c.Params("id")
 
+	// Fetch the existing equipment to update associations
+	var existingEquipment models.Equipment
+	if err := tx.Preload("Services").First(&existingEquipment, "id = ?", id).Error; err != nil {
+		tx.Rollback()
+		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
+			"equipment not found", err.Error())
+	}
+
 	equipment := &models.Equipment{}
 	err := json.Unmarshal(c.Body(), equipment)
 	if err != nil {
+		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
 			"error binding body to struct", err.Error())
 	}
 
 	if equipment.Name == "" {
+		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
 			"error binding body to struct", errors.New("error: empty equipment name"))
 	}
-	err = tx.Where("id = ?", id).Updates(equipment).Error
-	if err != nil {
+
+	// Update scalar fields
+	if err := tx.Model(&existingEquipment).Updates(equipment).Error; err != nil {
+		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
 			"error committing database transaction on equipment update", err.Error())
 	}
 
-	err = tx.Commit().Error
-	if err != nil {
+	// If services are provided in the update, update the association
+	var dedodedJsonString map[string]string
+	err = json.Unmarshal(c.Body(), &dedodedJsonString)
+	if err == nil {
+		if value, ok := dedodedJsonString["services"]; ok {
+			serviceIDs := strings.Split(value, ",")
+			services := []*models.Service{}
+			for _, service_id := range serviceIDs {
+				service := models.Service{}
+				tx.First(&service, "id = ?", service_id)
+				services = append(services, &service)
+			}
+			if err := tx.Model(&existingEquipment).Association("Services").Replace(services); err != nil {
+				tx.Rollback()
+				return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
+					"error updating services association", err.Error())
+			}
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error committing transaction", err.Error())
@@ -195,7 +227,7 @@ func (h *Handler) UpdateEquipment(c fiber.Ctx) error {
 
 	log.Println("Updating Equipment ...")
 
-	return apis.GeneralApiResponse(c, apis.StatusOkResponseCode, "successfully uptdated equipment", &equipment)
+	return apis.GeneralApiResponse(c, apis.StatusOkResponseCode, "successfully uptdated equipment", &existingEquipment)
 }
 
 func (h *Handler) DeleteEquipment(c fiber.Ctx) error {
@@ -207,15 +239,22 @@ func (h *Handler) DeleteEquipment(c fiber.Ctx) error {
 
 	id := c.Params("id")
 
+	// Remove associations in serviced_equipments before deleting equipment
+	if err := tx.Exec("DELETE FROM serviced_equipments WHERE equipment_id = ?", id).Error; err != nil {
+		tx.Rollback()
+		return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
+			"error deleting related serviced_equipments", err.Error())
+	}
+
 	equipment := &models.Equipment{}
 	err := tx.Where("id = ?", id).Delete(equipment).Error
 	if err != nil {
+		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
 			"error committing database transaction on equipment update", err.Error())
 	}
 
-	err = tx.Commit().Error
-	if err != nil {
+	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error committing transaction", err.Error())

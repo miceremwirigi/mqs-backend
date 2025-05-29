@@ -178,15 +178,21 @@ func (h *Handler) DeleteEngineer(c fiber.Ctx) error {
 
 	id := c.Params("id")
 
-	engineer := &models.Engineer{}
-	err := tx.Where("id = ?", id).Delete(engineer).Error
-	if err != nil {
+	// Remove associations in serviced_by join table before deleting engineer
+	if err := tx.Exec("DELETE FROM serviced_by WHERE engineer_id = ?", id).Error; err != nil {
+		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
-			"error committing database transaction on engineer update", err.Error())
+			"error deleting related serviced_by entries", err.Error())
 	}
 
-	err = tx.Commit().Error
-	if err != nil {
+	engineer := &models.Engineer{}
+	if err := tx.Where("id = ?", id).Delete(engineer).Error; err != nil {
+		tx.Rollback()
+		return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
+			"error committing database transaction on engineer delete", err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error committing transaction", err.Error())

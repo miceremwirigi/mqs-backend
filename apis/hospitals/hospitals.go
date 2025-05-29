@@ -178,19 +178,41 @@ func (h *Handler) DeleteHospital(c fiber.Ctx) error {
 
 	id := c.Params("id")
 
-	hospital := &models.Hospital{}
-	err := tx.Where("id = ?", id).Delete(hospital).Error
-	if err != nil {
+	// Step 1: Fetch all equipments belonging to the hospital
+	var equipments []models.Equipment
+	if err := tx.Where("hospital_id = ?", id).Find(&equipments).Error; err != nil {
+		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
-			"error committing database transaction on hospital update", err.Error())
+			"error fetching equipments for hospital", err.Error())
 	}
 
-	err = tx.Commit().Error
-	if err != nil {
+	// Step 2: For each equipment, remove associations in serviced_equipments and delete the equipment
+	for _, equipment := range equipments {
+		if err := tx.Exec("DELETE FROM serviced_equipments WHERE equipment_id = ?", equipment.ID).Error; err != nil {
+			tx.Rollback()
+			return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
+				"error deleting related serviced_equipments", err.Error())
+		}
+		if err := tx.Where("id = ?", equipment.ID).Delete(&models.Equipment{}).Error; err != nil {
+			tx.Rollback()
+			return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
+				"error deleting equipment", err.Error())
+		}
+	}
+
+	// Step 3: Delete the hospital
+	hospital := &models.Hospital{}
+	if err := tx.Where("id = ?", id).Delete(hospital).Error; err != nil {
+		tx.Rollback()
+		return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
+			"error committing database transaction on hospital delete", err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error committing transaction", err.Error())
 	}
 
-	return apis.GeneralApiResponse(c, apis.StatusOkResponseCode, "successfully deleted hospital", nil)
+	return apis.GeneralApiResponse(c, apis.StatusOkResponseCode, "successfully deleted hospital and related equipments", nil)
 }
