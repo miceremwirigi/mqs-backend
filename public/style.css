@@ -12,14 +12,27 @@
     --button-hover-color: #030427;
 }
 
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     margin: 0;
     font-family: Arial, sans-serif;
     background-color: var(--main-bg-color);
     color: #333;
+}
+
+.content {
+    flex: 1 0 auto;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    justify-content: flex-start;
 }
 
 .header {
@@ -27,17 +40,40 @@ body {
     color: white;
     padding: 0;
     text-align: center;
-    font-size: 1.5rem;
+    font-size: 1.0rem;
     max-height: fit-content;
     margin-top: 0;
 }
 
 .body {
     padding: 2rem;
+    min-height: 100vh;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
     color: #eef5ef;
+}
+
+.menu-bar {
+    display: flex;
+    gap: 20px;
+    background: #f5f5f5;
+    padding: 10px 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.menu-link {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.main-section {
+    display: none;
+    padding: 20px;
 }
 
 p {
@@ -73,9 +109,10 @@ button:hover {
     padding: 1rem 0;
     margin-top: 2rem;
     font-size: 0.9rem;
+    flex-shrink: 0;
 }
 
-div#success-popup{
+div#success-popup {
     display: none;
     position: fixed;
     /* z-index: 2; */
@@ -86,7 +123,7 @@ div#success-popup{
     color: white;
     padding: 20px;
     border-radius: 5px;
-  }
+}
 
 div#failed-popup {
     display: none;
@@ -99,7 +136,7 @@ div#failed-popup {
     color: white;
     padding: 20px;
     border-radius: 5px;
-  }
+}
 
 table {
     width: 100%;
@@ -109,9 +146,12 @@ table {
     display: block;
     overflow-x: auto;
     white-space: nowrap;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
-table th, table td {
+table th,
+table td {
     border: 1px solid #ddd;
     padding: 0.75rem;
 }
@@ -141,7 +181,7 @@ form {
     gap: 0.1rem;
     max-width: 60vw;
     margin: 0 0 auto 4rem;
-    
+
 }
 
 form h3 {
@@ -180,6 +220,7 @@ form button[type="submit"] {
     border-radius: 4px;
     font-size: 1rem;
     transition: background-color 0.3s ease;
+    margin-bottom: 1rem;
 }
 
 form button[type="submit"]:hover {
@@ -204,16 +245,24 @@ form button[type="submit"]:hover {
 /* Responsive styles for smaller screens and orientation */
 @media (max-width: 768px) {
     body {
-        padding: 1rem;
+        /* padding: 1rem; */
     }
 
     .header {
-        font-size: 1.2rem;
-        padding: 0.5rem;
+        font-size: 0.8rem;
+        padding: 0.2rem;
     }
 
     .body {
-        padding: 1rem;
+        padding: 0.2rem;
+    }
+
+    .menu-bar {
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 5px;
+        overflow: auto;
     }
 
     form {
@@ -233,24 +282,57 @@ form button[type="submit"]:hover {
         font-size: 0.9rem;
     }
 
-    table th, table td {
+    table th,
+    table td {
         padding: 0.5rem;
     }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
     body {
-        flex-direction: row;
+        flex-direction: column;
         align-items: flex-start;
     }
 
     .header {
-        font-size: 1rem;
-        padding: 0.5rem;
+        font-size: 0.6rem;
+        padding: 0rem;
     }
 
     .body {
-        padding: 0.5rem;
+        padding: 0rem;
+    }
+
+    .menu-bar {
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 5px;
+        overflow: hidden;
+    }
+
+    .menu-link {
+        margin: 0.5rem 0;
+        font-size: 1rem;
+    }
+
+    .main-section {
+        width: 100%;
+        display: block;
+        padding: 10px;
+    }
+
+    .main-section.active {
+        display: block;
+    }
+
+    .main-section.inactive {
+        display: none;
+    }
+
+    .show-form-button {
+        margin: 0 auto;
+        width: 100%;
     }
 
     form {

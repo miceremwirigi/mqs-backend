@@ -1,3 +1,30 @@
+document.addEventListener("DOMContentLoaded", function() {
+        const menuLinks = document.querySelectorAll('.menu-link');
+        const sections = document.querySelectorAll('.main-section');
+        function showSection(id) {
+          sections.forEach(sec => sec.style.display = 'none');
+          const target = document.getElementById(id);
+          target.style.display = 'block';
+            localStorage.setItem('activeSection', id);
+        }
+        menuLinks.forEach(link => {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            showSection(this.dataset.section);
+          });
+        });
+        // Show the first section by default
+        const activeSection = localStorage.getItem('activeSection');
+        if (activeSection && document.getElementById(activeSection)) {
+          sections.forEach(sec => sec.style.display = 'none');
+          document.getElementById(activeSection).style.display = 'block';
+        } else {
+          if (sections[0]) {
+            sections[0].style.display = 'block';
+          }
+        }
+      });
+
 var allHospitals = new Array;
 var allEngineers = new Array;
 var allEquipment = new Array;
