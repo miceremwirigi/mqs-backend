@@ -3,7 +3,6 @@ package engineers
 import (
 	"encoding/json"
 	"errors"
-	"log"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/miceremwirigi/mqs-backend/common"
@@ -163,8 +162,6 @@ func (h *Handler) UpdateEngineer(c fiber.Ctx) error {
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error committing transaction", err.Error())
 	}
-
-	log.Println("Updating Engineer ...")
 
 	return apis.GeneralApiResponse(c, apis.StatusOkResponseCode, "successfully uptdated engineer", &engineer)
 }

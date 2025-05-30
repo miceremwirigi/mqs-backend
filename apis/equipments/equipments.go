@@ -3,7 +3,6 @@ package equipments
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"strconv"
 	"strings"
 
@@ -121,7 +120,6 @@ func (h *Handler) AddEquipment(c fiber.Ctx) error {
 	var dedodedJsonString map[string]string
 	err = json.Unmarshal(c.Body(), &dedodedJsonString)
 	if err != nil {
-		log.Println("error decoding json to string")
 		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
 			"error decoding json to string", errors.New("error: error decoding json to string"))
 	}
@@ -130,7 +128,6 @@ func (h *Handler) AddEquipment(c fiber.Ctx) error {
 		if key == "servicing_period" {
 			equipment.ServicingPeriod, err = strconv.Atoi(value)
 			if err != nil {
-				log.Println("error converting servicing period string to int")
 				return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
 					"eerror converting servicing period string to int", errors.New("error: error converting servicing period string to int"))
 			}
@@ -138,7 +135,6 @@ func (h *Handler) AddEquipment(c fiber.Ctx) error {
 		if key == "hospital_id" {
 			equipment.HospitalID, err = uuid.ParseBytes([]byte(value))
 			if err != nil {
-				log.Println("error converting hospital_id string to uuid")
 				return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
 					"error converting hospital_id string to uuid", errors.New("error: error converting hospital_id string to uuid"))
 			}
@@ -224,8 +220,6 @@ func (h *Handler) UpdateEquipment(c fiber.Ctx) error {
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error committing transaction", err.Error())
 	}
-
-	log.Println("Updating Equipment ...")
 
 	return apis.GeneralApiResponse(c, apis.StatusOkResponseCode, "successfully uptdated equipment", &existingEquipment)
 }

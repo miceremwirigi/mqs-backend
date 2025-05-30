@@ -3,7 +3,6 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -120,7 +119,6 @@ func (h *Handler) AddService(c fiber.Ctx) error {
 	var dedodedJsonString map[string]string
 	err := json.Unmarshal(c.Body(), &dedodedJsonString)
 	if err != nil {
-		log.Println("error decoding json to string")
 		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
 			"error decoding json to string", errors.New("error: error decoding json to string"))
 	}
@@ -148,29 +146,12 @@ func (h *Handler) AddService(c fiber.Ctx) error {
 			for _, engineer_id := range engineerIDs {
 				engineer := models.Engineer{}
 				tx.First(&engineer, "id = ?", engineer_id)
-				fmt.Println(engineer)
 				engineers = append(engineers, &engineer)
 			}
 			service.Engineers = engineers
 		default:
-			fmt.Println(key + ": " + value)
+			log.Println(key + ": " + value)
 		}
-		// if key == "servicing_period" {
-		// 	equipment.ServicingPeriod, err = strconv.Atoi(value)
-		// 	if err != nil {
-		// 		log.Println("error converting servicing period string to int")
-		// 		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
-		// 			"eerror converting servicing period string to int", errors.New("error: error converting servicing period string to int"))
-		// 	}
-		// }
-		// if key == "hospital_id" {
-		// 	equipment.HospitalID, err = uuid.ParseBytes([]byte(value))
-		// 	if err != nil {
-		// 		log.Println("error converting hospital_id string to uuid")
-		// 		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
-		// 			"error converting hospital_id string to uuid", errors.New("error: error converting hospital_id string to uuid"))
-		// 	}
-		// }
 	}
 
 	if service.Date.IsZero() {
@@ -214,7 +195,6 @@ func (h *Handler) UpdateService(c fiber.Ctx) error {
 	var dedodedJsonString map[string]string
 	err := json.Unmarshal(c.Body(), &dedodedJsonString)
 	if err != nil {
-		log.Println("error decoding json to string")
 		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
 			"error decoding json to string", errors.New("error: error decoding json to string"))
@@ -258,7 +238,7 @@ func (h *Handler) UpdateService(c fiber.Ctx) error {
 					"error updating engineers", err.Error())
 			}
 		default:
-			fmt.Println(key + ": " + value)
+			log.Println(key + ": " + value)
 		}
 	}
 
@@ -280,8 +260,6 @@ func (h *Handler) UpdateService(c fiber.Ctx) error {
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error committing transaction", err.Error())
 	}
-
-	log.Println("Updating Service ...")
 
 	return apis.GeneralApiResponse(c, apis.StatusOkResponseCode, "successfully updated service", &service)
 }

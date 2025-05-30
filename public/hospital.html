@@ -18,11 +18,16 @@
         <div id="failed-popup">Failed</div>
 
         <div id="hospitals-section" class="main-section">
-            <h3 style="color: black;">Hospital Name: {{.Name}}</h3>
-            <h3 style="color: black;">Location: {{.Location}}</h3>
-            <h3 style="color: black;">Contact: {{.Phone}}</h3>
+            <div class="detail-info">
+                <span class="detail-label">Hospital Name:</span> <span class="detail-value">{{.Name}}</span>
+            </div>
+            <div class="detail-info">
+                <span class="detail-label">Location:</span> <span class="detail-value">{{.Location}}</span>
+            </div>
+            <div class="detail-info">
+                <span class="detail-label">Contact:</span> <span class="detail-value">{{.Phone}}</span>
+            </div>
 
-            <!-- <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe> -->
             <form id="update-hospital-form" class="add-content-form">
                 <h3>Add New Hospital</h3>
                 <label for="hospital-name">Hospital Name</label>

@@ -17,10 +17,13 @@
         <div id="success-popup">Success</div>
         <div id="failed-popup">Failed</div>
 
-        <h3 style="color: black;">Engineer Name: {{.name}}</h3>
-        <h3 style="color: black;">Contact: {{.contact}}</h3>
+        <div class="detail-info">
+            <span class="detail-label">Engineer Name:</span> <span class="detail-value">{{.name}}</span>
+        </div>
+        <div class="detail-info">
+            <span class="detail-label">Contact:</span> <span class="detail-value">{{.contact}}</span>
+        </div>
 
-        <!-- <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe> -->
         <form id="update-engineer-form" class="add-content-form">
             <h3>Add New Engineer</h3>
             <label for="engineer-name">Engineer Name</label>
@@ -38,94 +41,96 @@
             <button onclick="deleteEngineer()">Delete</button>
         </span>
 
-        <script>
-            const form = document.getElementById("update-engineer-form");
-            form.addEventListener( 'submit', async (event) => {
-                    event.preventDefault();
-                })
+        <div class="table-responsive">
+            <script>
+                const form = document.getElementById("update-engineer-form");
+                form.addEventListener( 'submit', async (event) => {
+                        event.preventDefault();
+                    })
 
-            deleteEngineerUrl = "/api/engineers/delete/{{.id}}";
-            function deleteEngineer() {
-                fetch(deleteEngineerUrl,{
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                })
-                .then(response => {
-                    if (!response.ok){
-                    throw new Error(`HTTP Error: Status ${response.status}`);
-                }
-                    return response.json();
-                })
-                .then(data => {
-                    
-                    showSuccessMessage();
-                    window.location.href = "/index.html";
-                })
-                .catch(error => {
-                    console.Error("error fetching engineers");
-                    showFailedMessage();
-                })
-            }
-
-            async function handleUpdateFormSubmit() {
-                const form = document.getElementById("update-engineer-form");                
-                const formData = new FormData(form);
-
-                const jsonObject = Object.fromEntries(formData.entries())
-
-                const jsonString = JSON.stringify(jsonObject);
-                console.log(`form data ${jsonString}`);
-
-                await fetch ("/api/engineers/{{.id}}",{
-                    method: "PUT",
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: jsonString,
-                })
-                .then(response => {
-                    console.log(response)
-                    if (!response.ok) {
+                deleteEngineerUrl = "/api/engineers/delete/{{.id}}";
+                function deleteEngineer() {
+                    fetch(deleteEngineerUrl,{
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                    .then(response => {
+                        if (!response.ok){
                         throw new Error(`HTTP Error: Status ${response.status}`);
                     }
-                    return response.json();
-                })
-                .then( body => {
-                    showSuccessMessage();
-                })
-                .catch( error => {
-                    console.error(`"error updating engineer: ${error}`);
-                    showFailedMessage();
-                })
-                // window.location.href = "/api/engineers/details/{{.id}}";
-                hideInputForms();
-            }
+                        return response.json();
+                    })
+                    .then(data => {
+                        
+                        showSuccessMessage();
+                        window.location.href = "/index.html";
+                    })
+                    .catch(error => {
+                        console.Error("error fetching engineers");
+                        showFailedMessage();
+                    })
+                }
 
-            function showSuccessMessage() {
-                const popup = document.getElementById('success-popup');
-                popup.style.display = 'block';
-                setTimeout(function() {
-                    popup.style.display = 'none';
-                }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
-            }
+                async function handleUpdateFormSubmit() {
+                    const form = document.getElementById("update-engineer-form");                
+                    const formData = new FormData(form);
 
-            function showFailedMessage() {
-                const popup = document.getElementById('failed-popup');
-                popup.style.display = 'block';
-                setTimeout(function() {
-                    popup.style.display = 'none';
-                }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
-            }
-        </script>
-          
-        <p>For more information, please refer to the documentation.</p>
-        <p>Version: 1.0.0</p>
-    </div>
+                    const jsonObject = Object.fromEntries(formData.entries())
 
-    <div class="footer">
-        <p>&copy; 2025 MQS. All rights reserved.</p>
+                    const jsonString = JSON.stringify(jsonObject);
+                    console.log(`form data ${jsonString}`);
+
+                    await fetch ("/api/engineers/{{.id}}",{
+                        method: "PUT",
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: jsonString,
+                    })
+                    .then(response => {
+                        console.log(response)
+                        if (!response.ok) {
+                            throw new Error(`HTTP Error: Status ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then( body => {
+                        showSuccessMessage();
+                    })
+                    .catch( error => {
+                        console.error(`"error updating engineer: ${error}`);
+                        showFailedMessage();
+                    })
+                    window.location.href = "/api/engineers/details/{{.id}}";
+                    hideInputForms();
+                }
+
+                function showSuccessMessage() {
+                    const popup = document.getElementById('success-popup');
+                    popup.style.display = 'block';
+                    setTimeout(function() {
+                        popup.style.display = 'none';
+                    }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
+                }
+
+                function showFailedMessage() {
+                    const popup = document.getElementById('failed-popup');
+                    popup.style.display = 'block';
+                    setTimeout(function() {
+                        popup.style.display = 'none';
+                    }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
+                }
+            </script>
+              
+            <p>For more information, please refer to the documentation.</p>
+            <p>Version: 1.0.0</p>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025 MQS. All rights reserved.</p>
+        </div>
     </div>
 </body>
 </html>

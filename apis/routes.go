@@ -11,9 +11,6 @@ import (
 )
 
 func RegisterRoutes(app *fiber.App, db *gorm.DB) {
-	app.Get("/", func(c fiber.Ctx) error {
-		return c.SendString("Hello, world")
-	})
 	app.Get("/*", static.New("./public"))
 
 	app.Get("/ping", func(c fiber.Ctx) error {

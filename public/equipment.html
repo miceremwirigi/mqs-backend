@@ -17,14 +17,19 @@
         <div id="success-popup">Success</div>
         <div id="failed-popup">Failed</div>
 
-        <h3 style="color: black;">Equipment Name: {{.Name}}</h3>
-        <h3 style="color: black;">Model: {{.Model}}</h3>
-        <h3 style="color: black;">ServicingPeriod: {{.ServicingPeriod}}</h3>
-        <h3 style="color: black;">Hospital: {{.Hospital.Name}}</h3>
+        <div class="detail-info">
+            <span class="detail-label">Equipment Name:</span> <span class="detail-value">{{.Name}}</span>
+        </div>
+        <div class="detail-info">
+            <span class="detail-label">Model:</span> <span class="detail-value">{{.Model}}</span>
+        </div>
+        <div class="detail-info">
+            <span class="detail-label">Servicing Period:</span> <span class="detail-value">{{.ServicingPeriod}}</span>
+        </div>
+        <div class="detail-info">
+            <span class="detail-label">Hospital:</span> <span class="detail-value">{{.Hospital.Name}}</span>
+        </div>
 
-
-
-        <!-- <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe> -->
         <form id="update-equipment-form" class="add-content-form">
             <h3>Update Equipment</h3>
             <label for="equipment-name">Equipment Name</label>
