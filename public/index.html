@@ -15,6 +15,7 @@
         <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
 
         <nav class="menu-bar">
+            <a href="#" class="menu-link" style="float:left;" onclick="handleLogout()">Logout</a>
             <a href="#" class="menu-link" data-section="home-section">Home</a>
             <a href="#" class="menu-link" data-section="hospitals-section">Hospitals</a>
             <a href="#" class="menu-link" data-section="equipments-section">Equipments</a>
@@ -156,6 +157,7 @@
                         method: "POST",
                         headers: {
                             'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token'),
                         },
                         body: jsonString,
                     })
@@ -230,6 +232,7 @@
                         method: "POST",
                         headers: {
                             'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token'),
                         },
                         body: jsonString,
                     })
@@ -331,6 +334,7 @@
                         method: "POST",
                         headers: {
                             'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token'),
                         },
                         body: jsonString,
                     })
@@ -471,6 +475,7 @@
                         method: "POST",
                         headers: {
                             'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token'),
                         },
                         body: jsonString,
                     })
@@ -575,7 +580,14 @@
         const tableBody = document.getElementById('customers-table-body');
         if (!tableBody) return;
         tableBody.innerHTML = '';
-        await fetch('/api/equipments')
+        await fetch('/api/equipments',
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('jwt_token'),
+                    }
+                }
+            )
             .then(res => res.json())
             .then(data => {
                 const rows = data.data.map(equipment => {
@@ -630,7 +642,14 @@
         const tableBody = document.getElementById('hospitals-table-body');
         if (!tableBody) return;
         tableBody.innerHTML = '';
-        await fetch('/api/hospitals')
+        await fetch('/api/hospitals',
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('jwt_token'),
+                    }
+                }
+            )
             .then(res => res.json())
             .then(data => {
                 allHospitals = data.data; // <-- Set global for form select options
@@ -655,7 +674,14 @@
         const tableBody = document.getElementById('engineers-table-body');
         if (!tableBody) return;
         tableBody.innerHTML = '';
-        await fetch('/api/engineers')
+        await fetch('/api/engineers',
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+                    }
+                }
+            )
             .then(res => res.json())
             .then(data => {
                 allEngineers = data.data; // <-- Set global for form select options
@@ -679,7 +705,14 @@
         const tableBody = document.getElementById('equipments-table-body');
         if (!tableBody) return;
         tableBody.innerHTML = '';
-        await fetch('/api/equipments')
+        await fetch('/api/equipments',
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+                        }
+                    }
+                )
             .then(res => res.json())
             .then(data => {
                 allEquipments = data.data; // <-- Set global for form select options
@@ -705,7 +738,14 @@
         const tableBody = document.getElementById('services-table-body');
         if (!tableBody) return;
         tableBody.innerHTML = '';
-        await fetch('/api/services')
+        await fetch('/api/services',
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+                }
+            }
+        )
             .then(res => res.json())
             .then(data => {
                 // Sort services by date descending (most recent first)
@@ -865,7 +905,10 @@ window.addEventListener('DOMContentLoaded', function () {
       const phone = document.getElementById('modal-hospital-phone').value;
       if (!name || !location || !phone) return alert('Fill all fields');
       await fetch('/api/hospitals', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token'),
+         },
         body: JSON.stringify({ name, location, phone })
       });
       await refreshHospitalsTable();
@@ -884,7 +927,10 @@ window.addEventListener('DOMContentLoaded', function () {
       const hospital_id = document.getElementById('modal-hospital-select').value;
       if (!name || !model || !servicing_period || !hospital_id) return alert('Fill all fields');
       await fetch('/api/equipments', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+         },
         body: JSON.stringify({ name, model, servicing_period, hospital_id })
       });
       await refreshEquipmentsTable();
@@ -901,7 +947,10 @@ window.addEventListener('DOMContentLoaded', function () {
       const contact = document.getElementById('modal-engineer-contact').value;
       if (!name || !contact) return alert('Fill all fields');
       await fetch('/api/engineers', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+         },
         body: JSON.stringify({ name, contact })
       });
       await refreshEngineersTable();
@@ -922,7 +971,9 @@ window.addEventListener('DOMContentLoaded', function () {
       // Format date as ISO string (like in the service section)
       const date = new Date(dateRaw).toISOString();
       await fetch('/api/services', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token'),},
         body: JSON.stringify({ date, equipments: equipment_id, engineers: engineer_id })
       });
       modal.style.display = 'none';

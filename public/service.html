@@ -64,6 +64,7 @@
             <div class="table-responsive">
                 <table>
                     <script>
+                        const token = localStorage.getItem('jwt_token');
                         console.log("Service object received: {{.}}");
                         hideInputForms();
                         // Fetch all equipments and engineers for select options
@@ -153,6 +154,7 @@
                                 method: "PUT",
                                 headers: {
                                     'Content-Type': 'application/json',
+                                    'Authorization': 'Bearer ' + token,
                                 },
                                 body: jsonString,
                             })
@@ -178,6 +180,7 @@
                                 method: 'DELETE',
                                 headers: {
                                     'Content-Type': 'application/json',
+                                    'Authorization': 'Bearer ' + token,
                                 },
                             })
                             .then(response => {

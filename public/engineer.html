@@ -47,13 +47,15 @@
                 form.addEventListener( 'submit', async (event) => {
                         event.preventDefault();
                     })
-
+                
+                const token = localStorage.getItem('jwt_token');
                 deleteEngineerUrl = "/api/engineers/delete/{{.id}}";
                 function deleteEngineer() {
                     fetch(deleteEngineerUrl,{
                         method: 'DELETE',
                         headers: {
                             'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token,
                         },
                     })
                     .then(response => {
@@ -82,10 +84,12 @@
                     const jsonString = JSON.stringify(jsonObject);
                     console.log(`form data ${jsonString}`);
 
+                    const token = localStorage.getItem('jwt_token');
                     await fetch ("/api/engineers/{{.id}}",{
                         method: "PUT",
                         headers: {
                             'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token,
                         },
                         body: jsonString,
                     })

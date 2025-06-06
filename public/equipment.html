@@ -61,12 +61,14 @@
                     event.preventDefault();
                 })
 
+            const token = localStorage.getItem('jwt_token');
             deleteEquipmentUrl = "/api/equipments/delete/{{.id}}";
             function deleteEquipment() {
                 fetch(deleteEquipmentUrl,{
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token,
                     },
                 })
                 .then(response => {
@@ -95,10 +97,12 @@
                 const jsonString = JSON.stringify(jsonObject);
                 console.log(`form data ${jsonString}`);
 
+                const token = localStorage.getItem('jwt_token');
                 await fetch ("/api/equipments/{{.id}}",{
                     method: "PUT",
                     headers: {
                         'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token,
                     },
                     body: jsonString,
                 })

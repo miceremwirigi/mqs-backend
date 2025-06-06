@@ -6,6 +6,7 @@ var (
 	StatusOkResponseCode                  = 200
 	StatusBadRequestResponseCode          = 400
 	StatusInternalServerErrorResponseCode = 500
+	StatusForbiddenResponseCode           = 403
 	StatusNotFoundResponseCode            = 404
 	StatusCreatedResponseCode             = 201
 	StatusNoContentResponseCode           = 204
