@@ -1,3 +1,4 @@
+var token = localStorage.getItem('jwt_token');
 document.addEventListener("DOMContentLoaded", function() {
         const menuLinks = document.querySelectorAll('.menu-link');
         const sections = document.querySelectorAll('.main-section');
@@ -60,4 +61,10 @@ function showFailedMessage() {
   setTimeout(function() {
     popup.style.display = 'none';
   }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
+}
+
+// Logout utility (call this on logout)
+function handleLogout() {
+    localStorage.removeItem('jwt_token');
+    window.location.href = "login.html";
 }

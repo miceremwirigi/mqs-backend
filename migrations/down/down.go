@@ -28,4 +28,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to drop table: %s", err)
 	}
+
+	err = db.Migrator().DropTable(&models.User{})
+	if err != nil {
+		log.Fatalf("Failed to drop table: %s", err)
+	}
+	log.Println("Successfully dropped all tables")
 }
