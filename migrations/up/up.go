@@ -28,4 +28,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create table: %s", err)
 	}
+
+	err = db.AutoMigrate(&models.User{})
+	if err != nil {
+		log.Fatalf("Failed to create table: %s", err)
+	}
 }
