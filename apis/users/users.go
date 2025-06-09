@@ -2,6 +2,7 @@ package users
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/golang-jwt/jwt/v5"
@@ -155,15 +156,42 @@ func (h *Handler) AddUser(c fiber.Ctx) error {
 		user.Role = "admin"
 	} else {
 		// For all other users, require the requester to be an admin
-		claims := c.Locals("user") // Assumes JWT middleware sets this
+		// Only check for Authorization header if there is at least one user
+		authHeader := c.Get("Authorization")
+		if authHeader == "" {
+			return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
+				"authorization header missing", nil)
+		}
+		// Expect header in format "Bearer <token>"
+		var tokenString string
+		if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+			tokenString = authHeader[7:]
+		} else {
+			return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
+				"invalid authorization header format", nil)
+		}
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			// Replace with your JWT secret or key lookup
+			return []byte(auth.JwtKey), nil
+		})
+		if err != nil || !token.Valid {
+			return apis.GeneralApiResponse(c, apis.StatusForbiddenResponseCode,
+				"invalid token", err)
+		}
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			return apis.GeneralApiResponse(c, apis.StatusForbiddenResponseCode,
+				"invalid token claims", nil)
+		}
 		if claims == nil {
-			return apis.GeneralApiResponse(c, apis.StatusUnauthorizedResponseCode,
+			log.Println("JWT claims not found in context")
+			return apis.GeneralApiResponse(c, apis.StatusForbiddenResponseCode,
 				"only admins can create users", nil)
 		}
 		// Example for github.com/golang-jwt/jwt/v5
-		tokenClaims := claims.(*jwt.Token).Claims.(jwt.MapClaims)
-		role, ok := tokenClaims["role"].(string)
+		role, ok := claims["role"].(string)
 		if !ok || role != "admin" {
+			log.Println("Unauthorized user creation attempt by non-admin")
 			return apis.GeneralApiResponse(c, apis.StatusForbiddenResponseCode,
 				"only admins can create users", nil)
 		}

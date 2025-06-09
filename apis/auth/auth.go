@@ -23,6 +23,8 @@ type loginInfo struct {
 	Password string `json:"password"`
 }
 
+var JwtKey = []byte("your_secret_key") // Replace with your actual secret key
+
 func GenerateHashFromPassword(password string) (string, error) {
 	bcryptCost := bcrypt.DefaultCost
 	if bcryptCost < 4 || bcryptCost > 31 {
@@ -63,15 +65,13 @@ func (h *Handler) LoginUser(c fiber.Ctx) (string, error) {
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
 		tx.Rollback()
-		return "", errors.New("invalid password"+": " + user.PasswordHash)
+		return "", errors.New("invalid password" + ": " + user.PasswordHash)
 	}
 	err = tx.Commit().Error
 	if err != nil {
 		tx.Rollback()
 		return "", errors.New("error committing transaction")
 	}
-
-	var jwtKey = []byte("your_secret_key") // Replace with your actual secret key
 
 	claims := Claims{
 		Username: user.Username,
@@ -84,7 +84,7 @@ func (h *Handler) LoginUser(c fiber.Ctx) (string, error) {
 	}
 
 	tokenObj := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	token, err := tokenObj.SignedString(jwtKey)
+	token, err := tokenObj.SignedString(JwtKey)
 	if err != nil {
 		tx.Rollback()
 		return "", errors.New("failed to generate token")
@@ -94,6 +94,7 @@ func (h *Handler) LoginUser(c fiber.Ctx) (string, error) {
 
 // Client side token deletion from storage already implemented
 func (h *Handler) LogoutUser(c fiber.Ctx) error {
-	// Invalidate the token by removing it from the client side or using a blacklist
+	// Token is invalidated by removing it from the client side
+	// Altrnative way is to blacklist it(not implemented here)
 	return c.SendStatus(fiber.StatusOK)
 }
