@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="style.css">
+        <script src="script.js"></script>
+        <title>MQS - Register</title>
+        <style>
+            .content {
+                max-width: 420px;
+                margin: 2.5rem auto 0 auto;
+                background: #fff;
+                border-radius: 14px;
+                box-shadow: 0 2px 16px rgba(44, 62, 80, 0.10);
+                padding: 2.2rem 2rem 1.5rem 2rem;
+            }
+            .error-message {
+                color: #e53e3e;
+                font-size: 0.97rem;
+                min-height: 1.2em;
+                display: block;
+                text-align: center;
+            }
+
+            #success-popup, #failed-popup {
+                display: none;
+                position: fixed;
+                top: 1.5rem;
+                left: 50%;
+                transform: translateX(-50%);
+                min-width: 180px;
+                padding: 0.8rem 1.2rem;
+                border-radius: 6px;
+                font-size: 1.1rem;
+                font-weight: 500;
+                text-align: center;
+                z-index: 1000;
+            }
+
+            #success-popup {
+                background: #38a169;
+                color: #fff;
+            }
+
+            #failed-popup {
+                background: #e53e3e;
+                color: #fff;
+            }
+
+            .footer {
+                text-align: center;
+                color: #718096;
+                font-size: 0.95rem;
+                margin: 2.5rem 0 1rem 0;
+            }
+
+            /* Responsive adjustments */
+            @media (max-width: 500px) {
+                .content {
+                    max-width: 98vw;
+                    padding: 1.2rem 0.5rem 1rem 0.5rem;
+                }
+                .header {
+                    padding: 1.2rem 0 0.7rem 0;
+                }
+                .login-image img {
+                    width: 120px !important;
+                }
+            }
+        </style>
+
+    </head>
+    <body>
+        <div class="header">
+            <h1 class="title">MQS Inc.</h1>
+            <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
+        </div>
+        <div class="content">
+            <div id="success-popup">Success</div>
+            <div id="failed-popup">Failed</div>
+
+            <div class="login-links">
+                <a href="login.html">Login</a>
+                <span> | </span>
+                <a href="index.html">Back to Home</a>
+            </div>
+
+            <div id="register-section" class="auth-section">
+                <div class="register-header">
+                    <h4>Register to MQS</h4>
+                </div>
+                <div id="register-form-container" class="register-form-container">
+                    <form id="register-form" class="register-form">
+                        <label for="first-name">First Name:</label>
+                        <input type="text" id="first-name" name="first_name" required autocomplete="given-name">
+                        <br>
+                        <label for="last-name">Last Name:</label>
+                        <input type="text" id="last-name" name="last_name" required autocomplete="family-name">
+                        <br>
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" required autocomplete="email">
+                        <br>
+                        <label for="role">Role:</label>
+                        <select id="role" name="role" required>
+                            <option value="">Select role</option>
+                            <option value="user" selected>User</option>
+                            <option value="admin">Admin</option>
+                            <option value="engineer">Engineer</option>
+                        </select>
+                        <br>
+                        <label for="phone">Phone:</label>
+                        <input type="tel" id="phone" name="phone" required autocomplete="tel">
+                        <br>
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" required autocomplete="username">
+                        <br>
+                        <label for="password">Password:</label>            
+                        <input type="password" id="password" name="password" required autocomplete="new-password">
+                        <br>
+                        <label for="confirm-password">Confirm Password:</label>
+                        <input type="password" id="confirm-password" name="confirm_password" required autocomplete="new-password">
+                        <br>
+                        <span class="error-message" id="error-message"></span>
+                        <button type="submit" onclick="handleRegister(onsubmit)">Register</button>
+                    </form>
+                </div>                
+            </div>
+        </div>
+        <div class="footer">
+            <p>&copy; 2025 MQS. All rights reserved.</p>
+        </div>
+    </body>
+    <script>
+        async function handleRegister(event) {
+            // Prevent default form submission
+            if (event) event.preventDefault();
+
+            // Get form data
+            const form = document.getElementById('register-form');
+            const formData = new FormData(form);
+
+            // Convert form data to JSON
+            const jsonObject = Object.fromEntries(formData.entries());
+            const jsonString = JSON.stringify(jsonObject);
+
+            // Validate form fields
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = ""; // Clear previous error message
+
+            console.log("Form Data:", jsonObject);
+
+            if (!jsonObject.first_name || !jsonObject.last_name || !jsonObject.email || !jsonObject.role || !jsonObject.phone) {
+                errorMessage.textContent = "Please fill in all fields.";
+                return;
+            }
+
+            // Validate email format
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(jsonObject.email)) {
+                errorMessage.textContent = "Please enter a valid email address.";
+                return;
+            }
+
+            // Validate phone number format (basic validation)
+            const phonePattern = /^\+?[0-9\s-]{7,15}$/; // Adjust pattern as needed
+            if (!phonePattern.test(jsonObject.phone)) {
+                errorMessage.textContent = "Please enter a valid phone number.";
+                return;
+            }
+
+            // Validate username and password
+            if (!jsonObject.username || jsonObject.username.length < 3) {
+                errorMessage.textContent = "Username must be at least 3 characters long.";
+                return;
+            }
+            if (!jsonObject.password || jsonObject.password.length < 6) {
+                console.log("Password length:", jsonObject.password.length);
+                console.log("Password:", jsonObject.password);
+                console.log("jsonObject:", jsonObject);
+                errorMessage.textContent = "Password must be at least 6 characters long.";
+                return;
+            }
+            if (jsonObject.password !== jsonObject.confirm_password) {
+                errorMessage.textContent = "Passwords do not match.";
+                return;
+            }
+
+            // Remove confirm_password from the JSON object before sending
+            delete jsonObject.confirm_password;
+
+            // Send the JSON data to the server
+            const registerUrl = "/auth/register";
+            try {
+                const response = await fetch(registerUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: jsonString,
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: Status ${response.status}`);
+                }
+
+                const result = await response.json();
+                showSuccessMessage("Registration successful!");
+                document.location = "login.html";
+            } catch (error) {
+                showFailedMessage("Registration failed: " + error.message);
+            }
+        }
+
+        function showSuccessMessage(msg) {
+            const popup = document.getElementById('success-popup');
+            popup.textContent = msg || "Success";
+            popup.style.display = 'block';
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 3000);
+        }
+
+        function showFailedMessage(msg) {
+            const popup = document.getElementById('failed-popup');
+            popup.textContent = msg || "Failed";
+            popup.style.display = 'block';
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 3000);
+        }
+
+        // Attach the event listener to the form
+        document.getElementById('register-form').addEventListener('submit', handleRegister);
+    </script>
+    <script src="script.js"></script>
+</html>

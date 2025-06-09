@@ -61,62 +61,43 @@
                     event.preventDefault();
                 })
 
-            deleteEquipmentUrl = "/api/equipments/delete/{{.id}}";
+            const token = localStorage.getItem('jwt_token');
+            const deleteEquipmentUrl = "/api/equipments/delete/{{.id}}";
+
             function deleteEquipment() {
-                fetch(deleteEquipmentUrl,{
+                fetchWithAuth(deleteEquipmentUrl, {
                     method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                })
-                .then(response => {
-                    if (!response.ok){
-                    throw new Error(`HTTP Error: Status ${response.status}`);
-                }
-                    return response.json();
                 })
                 .then(data => {
-                    
                     showSuccessMessage();
                     window.location.href = "/index.html";
                 })
                 .catch(error => {
-                    console.Error("error fetching equipments");
+                    console.error("Error deleting equipment:", error);
                     showFailedMessage();
-                })
+                });
             }
 
             async function handleUpdateFormSubmit() {
-                const form = document.getElementById("update-equipment-form");                
+                const form = document.getElementById("update-equipment-form");
                 const formData = new FormData(form);
 
-                const jsonObject = Object.fromEntries(formData.entries())
-
+                const jsonObject = Object.fromEntries(formData.entries());
                 const jsonString = JSON.stringify(jsonObject);
-                console.log(`form data ${jsonString}`);
 
-                await fetch ("/api/equipments/{{.id}}",{
+                await fetchWithAuth(`/api/equipments/{{.id}}`, {
                     method: "PUT",
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
                     body: jsonString,
                 })
-                .then(response => {
-                    console.log(response)
-                    if (!response.ok) {
-                        throw new Error(`HTTP Error: Status ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then( body => {
+                .then(body => {
                     showSuccessMessage();
                 })
-                .catch( error => {
-                    console.error(`"error updating equipment: ${error}`);
+                .catch(error => {
+                    console.error(`Error updating equipment: ${error}`);
                     showFailedMessage();
-                })
-                window.location.href = "/api/equipments/details/{{.id}}";
+                });
+
+                window.location.href = `/api/equipments/details/{{.id}}`;
                 hideInputForms();
             }
 

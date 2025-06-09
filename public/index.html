@@ -15,6 +15,7 @@
         <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
 
         <nav class="menu-bar">
+            <a href="#" class="menu-link" style="float:left;" onclick="handleLogout()">Logout</a>
             <a href="#" class="menu-link" data-section="home-section">Home</a>
             <a href="#" class="menu-link" data-section="hospitals-section">Hospitals</a>
             <a href="#" class="menu-link" data-section="equipments-section">Equipments</a>
@@ -147,32 +148,21 @@
                     const form = document.getElementById("add-hospital-form");
                     const formData = new FormData(form);
 
-                    const jsonObject = Object.fromEntries(formData.entries())
-
+                    const jsonObject = Object.fromEntries(formData.entries());
                     const jsonString = JSON.stringify(jsonObject);
                     console.log(` form data ${jsonString}`);
 
-                    await fetch("/api/hospitals", {
+                    await fetchWithAuth("/api/hospitals", {
                         method: "POST",
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
                         body: jsonString,
                     })
-                        .then(response => {
-                            console.log(response)
-                            if (!response.ok) {
-                                throw new Error(`HTTP Error: Status ${response.status}`);
-                            }
-                            return response.json();
-                        })
                         .then(body => {
                             showSuccessMessage();
                         })
                         .catch(error => {
                             console.error(`"error adding hospital: ${error}`);
                             showFailedMessage();
-                        })
+                        });
                     window.location.href = "/index.html";
                     hideInputForms();
                 }
@@ -221,32 +211,21 @@
                     const engineersForm = document.getElementById("add-engineer-form");
                     const formData = new FormData(engineersForm);
 
-                    const jsonObject = Object.fromEntries(formData.entries())
-
+                    const jsonObject = Object.fromEntries(formData.entries());
                     const jsonString = JSON.stringify(jsonObject);
                     console.log(` form data ${jsonString}`);
 
-                    await fetch("/api/engineers", {
+                    await fetchWithAuth("/api/engineers", {
                         method: "POST",
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
                         body: jsonString,
                     })
-                        .then(response => {
-                            console.log(response.body)
-                            if (!response.ok) {
-                                throw new Error(`HTTP Error: Status ${response.status}`);
-                            }
-                            return response.json();
-                        })
                         .then(body => {
                             showSuccessMessage();
                         })
                         .catch(error => {
                             console.error(`"error adding engineer: ${error}`);
                             showFailedMessage();
-                        })
+                        });
                     window.location.href = "/index.html";
                     hideInputForms();
                 }
@@ -322,32 +301,21 @@
                     const equipmentsForm = document.getElementById("add-equipment-form");
                     const formData = new FormData(equipmentsForm);
 
-                    const jsonObject = Object.fromEntries(formData.entries())
-
+                    const jsonObject = Object.fromEntries(formData.entries());
                     const jsonString = JSON.stringify(jsonObject);
                     console.log(` form data ${jsonString}`);
 
-                    await fetch("/api/equipments", {
+                    await fetchWithAuth("/api/equipments", {
                         method: "POST",
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
                         body: jsonString,
                     })
-                        .then(response => {
-                            console.log(response.body)
-                            if (!response.ok) {
-                                throw new Error(`HTTP Error: Status ${response.status}`);
-                            }
-                            return response.json();
-                        })
                         .then(body => {
                             showSuccessMessage();
                         })
                         .catch(error => {
                             console.error(`"error adding equipment: ${error}`);
                             showFailedMessage();
-                        })
+                        });
                     window.location.href = "/index.html";
                     hideInputForms();
                 }
@@ -440,56 +408,34 @@
                     const formData = new FormData(servicesForm);
 
                     // Handle equipments options selection in service form
-                    var selectedEquipmentOptions = [];
-                    var selectEquipmentElement = document.getElementById("service-equipments");
-                    for (var i = 0; i < selectEquipmentElement.options.length; i++) {
-                        if (selectEquipmentElement.options[i].selected) {
-                            selectedEquipmentOptions.push(selectEquipmentElement.options[i].value);
-                        }
-                    }
-                    console.log(selectedEquipmentOptions)
-                    formData.set("equipments", selectedEquipmentOptions.join(','))
+                    const selectedEquipmentOptions = Array.from(
+                        document.getElementById("service-equipments").selectedOptions
+                    ).map(option => option.value);
+                    formData.set("equipments", selectedEquipmentOptions.join(","));
 
                     // Handle engineer options selection in service form
-                    var selectedEngineerOptions = [];
-                    var selectEngineerElement = document.getElementById("service-engineers");
-                    for (var i = 0; i < selectEngineerElement.options.length; i++) {
-                        if (selectEngineerElement.options[i].selected) {
-                            selectedEngineerOptions.push(selectEngineerElement.options[i].value);
-                        }
-                    }
-                    console.log(selectedEngineerOptions)
-                    formData.set("engineers", selectedEngineerOptions.join(','))
+                    const selectedEngineerOptions = Array.from(
+                        document.getElementById("service-engineers").selectedOptions
+                    ).map(option => option.value);
+                    formData.set("engineers", selectedEngineerOptions.join(","));
 
                     const jsonObject = Object.fromEntries(formData.entries());
-                    jsonObject.date = new Date(jsonObject.date)
+                    jsonObject.date = new Date(jsonObject.date);
 
                     const jsonString = JSON.stringify(jsonObject);
                     console.log(` form data ${jsonString}`);
 
-                    await fetch("/api/services", {
+                    await fetchWithAuth("/api/services", {
                         method: "POST",
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
                         body: jsonString,
                     })
-                        .then(response => {
-                            if (!response.ok) {
-                                return response.text().then((text) => {
-                                    console.log(text);
-                                    throw new Error(`HTTP Error: Status ${response.status}, body: ${text}`);
-                                })
-                            }
-                            return response.json();
-                        })
                         .then(body => {
                             showSuccessMessage();
                         })
                         .catch(error => {
-                            console.error(`"error adding service: ${error} :`, error.message);
+                            console.error(`"error adding service: ${error}`);
                             showFailedMessage();
-                        })
+                        });
                     window.location.href = "/index.html";
                     hideInputForms();
                 }
@@ -575,8 +521,7 @@
         const tableBody = document.getElementById('customers-table-body');
         if (!tableBody) return;
         tableBody.innerHTML = '';
-        await fetch('/api/equipments')
-            .then(res => res.json())
+        await fetchWithAuth('/api/equipments')
             .then(data => {
                 const rows = data.data.map(equipment => {
                     const hospital = equipment.Hospital || {};
@@ -630,21 +575,33 @@
         const tableBody = document.getElementById('hospitals-table-body');
         if (!tableBody) return;
         tableBody.innerHTML = '';
-        await fetch('/api/hospitals')
-            .then(res => res.json())
+        await fetchWithAuth('/api/hospitals')
             .then(data => {
                 allHospitals = data.data; // <-- Set global for form select options
                 data.data.forEach((hospital, idx) => {
                     const newRow = document.createElement('tr');
                     newRow.innerHTML = `
-            <td>${idx + 1}</td>
-            <td>${hospital.Name}</td>
-            <td>${hospital.Location}</td>
-            <td>${hospital.Phone}</td>
-          `;
+                    <td>${idx + 1}</td>
+                    <td>${hospital.Name}</td>
+                    <td>${hospital.Location}</td>
+                    <td>${hospital.Phone}</td>
+                `;
                     newRow.setAttribute('data-href', `/api/hospitals/details/${hospital.id}`);
-                    newRow.addEventListener('click', function () {
-                        window.location.href = this.dataset.href;
+                    newRow.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        const url = this.dataset.href;
+                        fetch(url, {
+                            headers: {
+                                'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+                            }
+                        })
+                        .then(response => response.text())
+                        .then(html => {
+                            document.open();
+                            document.write(html);
+                            document.close();
+                        })
+                        .catch(error => console.error('Error:', error));
                     });
                     tableBody.appendChild(newRow);
                 });
@@ -655,20 +612,32 @@
         const tableBody = document.getElementById('engineers-table-body');
         if (!tableBody) return;
         tableBody.innerHTML = '';
-        await fetch('/api/engineers')
-            .then(res => res.json())
+        await fetchWithAuth('/api/engineers')
             .then(data => {
                 allEngineers = data.data; // <-- Set global for form select options
                 data.data.forEach((engineer, idx) => {
                     const newRow = document.createElement('tr');
                     newRow.innerHTML = `
-            <td>${idx + 1}</td>
-            <td>${engineer.name}</td>
-            <td>${engineer.contact}</td>
-          `;
+                    <td>${idx + 1}</td>
+                    <td>${engineer.name}</td>
+                    <td>${engineer.contact}</td>
+                `;
                     newRow.setAttribute('data-href', `/api/engineers/details/${engineer.id}`);
-                    newRow.addEventListener('click', function () {
-                        window.location.href = this.dataset.href;
+                    newRow.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        const url = this.dataset.href;
+                        fetch(url, {
+                            headers: {
+                                'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+                            }
+                        })
+                        .then(response => response.text())
+                        .then(html => {
+                            document.open();
+                            document.write(html);
+                            document.close();
+                        })
+                        .catch(error => console.error('Error:', error));
                     });
                     tableBody.appendChild(newRow);
                 });
@@ -679,37 +648,46 @@
         const tableBody = document.getElementById('equipments-table-body');
         if (!tableBody) return;
         tableBody.innerHTML = '';
-        await fetch('/api/equipments')
-            .then(res => res.json())
+        await fetchWithAuth('/api/equipments')
             .then(data => {
                 allEquipments = data.data; // <-- Set global for form select options
                 data.data.forEach((equipment, idx) => {
                     const newRow = document.createElement('tr');
                     newRow.innerHTML = `
-            <td>${idx + 1}</td>
-            <td>${equipment.Name}</td>
-            <td>${equipment.Model}</td>
-            <td>${equipment.ServicingPeriod}</td>
-            <td>${equipment.Hospital.Name}</td>
-          `;
-                    newRow.setAttribute('data-href', `/api/equipments/details/${equipment.id}`);
-                    newRow.addEventListener('click', function () {
-                        window.location.href = this.dataset.href;
-                    });
-                    tableBody.appendChild(newRow);
+                    <td>${idx + 1}</td>
+                    <td>${equipment.Name}</td>
+                    <td>${equipment.Model}</td>
+                    <td>${equipment.ServicingPeriod}</td>
+                    <td>${equipment.Hospital.Name}</td>
+                `;
+                newRow.setAttribute('data-href', `/api/equipments/details/${equipment.id}`);
+                newRow.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const url = this.dataset.href;
+                    fetch(url, {
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        document.open();
+                        document.write(html);
+                        document.close();
+                    })
+                    .catch(error => console.error('Error:', error));
                 });
+                tableBody.appendChild(newRow);
             });
+        });
     }
 
     async function refreshServicesTable() {
         const tableBody = document.getElementById('services-table-body');
         if (!tableBody) return;
         tableBody.innerHTML = '';
-        await fetch('/api/services')
-            .then(res => res.json())
+        await fetchWithAuth('/api/services')
             .then(data => {
-                // Sort services by date descending (most recent first)
-                data.data.sort((a, b) => new Date(b.Date) - new Date(a.Date));
                 data.data.forEach((service, idx) => {
                     const newRow = document.createElement('tr');
                     let listOfEquipments = '';
@@ -721,18 +699,31 @@
                         listOfEngineers += engineer.name + ', ';
                     });
                     newRow.innerHTML = `
-            <td>${idx + 1}</td>
-            <td>${new Date(service.Date).toDateString()}</td>
-            <td>${listOfEquipments}</td>
-            <td>${listOfEngineers}</td>
-          `;
-                    newRow.setAttribute('data-href', `/api/services/details/${service.id}`);
-                    newRow.addEventListener('click', function () {
-                        window.location.href = this.dataset.href;
-                    });
-                    tableBody.appendChild(newRow);
+                    <td>${idx + 1}</td>
+                    <td>${new Date(service.Date).toDateString()}</td>
+                    <td>${listOfEquipments}</td>
+                    <td>${listOfEngineers}</td>
+                `;
+                newRow.setAttribute('data-href', `/api/services/details/${service.id}`);
+                newRow.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const url = this.dataset.href;
+                    fetch(url, {
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        document.open();
+                        document.write(html);
+                        document.close();
+                    })
+                    .catch(error => console.error('Error:', error));
                 });
+                tableBody.appendChild(newRow);
             });
+        });
     }
 
     // --- Section: Hook up auto-refresh on add/update/delete/section shift ---
@@ -865,7 +856,10 @@ window.addEventListener('DOMContentLoaded', function () {
       const phone = document.getElementById('modal-hospital-phone').value;
       if (!name || !location || !phone) return alert('Fill all fields');
       await fetch('/api/hospitals', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token'),
+         },
         body: JSON.stringify({ name, location, phone })
       });
       await refreshHospitalsTable();
@@ -884,7 +878,10 @@ window.addEventListener('DOMContentLoaded', function () {
       const hospital_id = document.getElementById('modal-hospital-select').value;
       if (!name || !model || !servicing_period || !hospital_id) return alert('Fill all fields');
       await fetch('/api/equipments', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+         },
         body: JSON.stringify({ name, model, servicing_period, hospital_id })
       });
       await refreshEquipmentsTable();
@@ -901,7 +898,10 @@ window.addEventListener('DOMContentLoaded', function () {
       const contact = document.getElementById('modal-engineer-contact').value;
       if (!name || !contact) return alert('Fill all fields');
       await fetch('/api/engineers', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+         },
         body: JSON.stringify({ name, contact })
       });
       await refreshEngineersTable();
@@ -922,7 +922,9 @@ window.addEventListener('DOMContentLoaded', function () {
       // Format date as ISO string (like in the service section)
       const date = new Date(dateRaw).toISOString();
       await fetch('/api/services', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token'),},
         body: JSON.stringify({ date, equipments: equipment_id, engineers: engineer_id })
       });
       modal.style.display = 'none';
@@ -931,5 +933,4 @@ window.addEventListener('DOMContentLoaded', function () {
     };
 })();
 </script>
-
 </html>

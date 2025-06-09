@@ -49,67 +49,43 @@
             </span>
 
             <script>
-                const form = document.getElementById("update-hospital-form");
-                form.addEventListener( 'submit', async (event) => {
-                        event.preventDefault();
-                    })
+                const deleteHospitalUrl = "/api/hospitals/delete/{{.id}}";
 
-                deleteHospitalUrl = "/api/hospitals/delete/{{.id}}";
                 function deleteHospital() {
-                    fetch(deleteHospitalUrl,{
+                    fetchWithAuth(deleteHospitalUrl, {
                         method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    })
-                    .then(response => {
-                        if (!response.ok){
-                        throw new Error(`HTTP Error: Status ${response.status}`);
-                    }
-                        return response.json();
                     })
                     .then(data => {
                         showSuccessMessage();
                         window.location.href = "/index.html";
                     })
                     .catch(error => {
-                        console.Error("error fetching hospitals");
+                        console.error("Error deleting hospital:", error);
                         showFailedMessage();
-                    })
+                    });
                 }
 
-                async function handleUpdateFormSubmit() {
-                    const form = document.getElementById("update-hospital-form");                
+                async function handleUpdateFormSubmit(event) {
+                    event.preventDefault(); // Prevent default form submission behavior
+                    const form = document.getElementById("update-hospital-form");
                     const formData = new FormData(form);
 
-                    const jsonObject = Object.fromEntries(formData.entries())
-
+                    const jsonObject = Object.fromEntries(formData.entries());
                     const jsonString = JSON.stringify(jsonObject);
-                    console.log(`form data ${jsonString}`);
 
-                    await fetch ("/api/hospitals/{{.id}}",{
+                    await fetchWithAuth(`/api/hospitals/{{.id}}`, {
                         method: "PUT",
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
                         body: jsonString,
                     })
-                    .then(response => {
-                        console.log(response)
-                        if (!response.ok) {
-                            throw new Error(`HTTP Error: Status ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then( body => {
-                        console.log(`data is: ${body.data}`)
+                    .then(body => {
                         showSuccessMessage();
                     })
-                    .catch( error => {
-                        console.error(`"error updating hospital: ${error}`);
+                    .catch(error => {
+                        console.error(`Error updating hospital: ${error}`);
                         showFailedMessage();
-                    })
-                    window.location.href = "/api/hospitals/details/{{.id}}";
+                    });
+
+                    window.location.href = `/api/hospitals/details/{{.id}}`;
                     hideInputForms();
                 }
 
@@ -128,6 +104,9 @@
                         popup.style.display = 'none';
                     }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
                 }
+
+                // Attach the event listener to the form
+                document.getElementById("update-hospital-form").addEventListener("submit", handleUpdateFormSubmit);
             </script>
             
             <p>For more information, please refer to the documentation.</p>

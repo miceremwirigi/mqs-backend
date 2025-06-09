@@ -64,6 +64,7 @@
             <div class="table-responsive">
                 <table>
                     <script>
+                        const token = localStorage.getItem('jwt_token');
                         console.log("Service object received: {{.}}");
                         hideInputForms();
                         // Fetch all equipments and engineers for select options
@@ -84,6 +85,7 @@
                                 select.appendChild(option);
                             });
                         }
+
                         function populateEngineersSelect(selectedEngineers) {
                             const select = document.getElementById("service-engineers");
                             select.innerHTML = '';
@@ -97,16 +99,15 @@
                                 select.appendChild(option);
                             });
                         }
+
                         // Fetch and populate on page load
-                        fetch(equipmentsUrl)
-                            .then(res => res.json())
+                        fetchWithAuth(equipmentsUrl)
                             .then(data => {
                                 allEquipments = data.data || [];
                                 // Optionally parse selected equipments from template variable
                                 populateEquipmentsSelect("{{.Equipments}}");
                             });
-                        fetch(engineersUrl)
-                            .then(res => res.json())
+                        fetchWithAuth(engineersUrl)
                             .then(data => {
                                 allEngineers = data.data || [];
                                 populateEngineersSelect("{{.Engineers}}");
@@ -134,66 +135,49 @@
                             event.preventDefault();
                             const form = document.getElementById("update-service-form");
                             const formData = new FormData(form);
-                            // Convert multiple selects to array
+
                             const equipments = Array.from(document.getElementById('service-equipments').selectedOptions).map(opt => opt.value);
                             const engineers = Array.from(document.getElementById('service-engineers').selectedOptions).map(opt => opt.value);
 
-                            formData.set("equipments", equipments.join(','))
-                            formData.set("engineers", engineers.join(','))
+                            formData.set("equipments", equipments.join(','));
+                            formData.set("engineers", engineers.join(','));
+
                             const jsonObject = Object.fromEntries(formData.entries());
-                            // Reformat date to RFC3339 (2006-01-02T15:04:05Z07:00) if present
                             if (jsonObject.date) {
-                                // If already in YYYY-MM-DD, convert to RFC3339 (YYYY-MM-DDT00:00:00Z)
                                 const dateObj = new Date(jsonObject.date);
-                                jsonObject.date = dateObj.toISOString(); // RFC3339 format
+                                jsonObject.date = dateObj.toISOString();
                             }
-                            
+
                             const jsonString = JSON.stringify(jsonObject);
-                            await fetch ("/api/services/{{.id}}",{
+
+                            await fetchWithAuth(`/api/services/{{.id}}`, {
                                 method: "PUT",
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
                                 body: jsonString,
                             })
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error(`HTTP Error: Status ${response.status}`);
-                                }
-                                return response.json();
-                            })
-                            .then( body => {
+                            .then(body => {
                                 showSuccessMessage();
                             })
-                            .catch( error => {
-                                console.error(`error updating service: ${error}`);
+                            .catch(error => {
+                                console.error(`Error updating service: ${error}`);
                                 showFailedMessage();
-                            })
+                            });
+
                             hideInputForms();
                         }
 
                         // Delete Service logic
                         function deleteService() {
-                            fetch("/api/services/delete/{{.id}}",{
+                            fetchWithAuth(`/api/services/delete/{{.id}}`, {
                                 method: 'DELETE',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                            })
-                            .then(response => {
-                                if (!response.ok){
-                                    throw new Error(`HTTP Error: Status ${response.status}`);
-                                }
-                                return response.json();
                             })
                             .then(data => {
                                 showSuccessMessage();
                                 window.location.href = "/index.html";
                             })
                             .catch(error => {
-                                console.error("error deleting service");
+                                console.error("Error deleting service:", error);
                                 showFailedMessage();
-                            })
+                            });
                         }
                     </script>
                 </table>
