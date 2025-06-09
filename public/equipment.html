@@ -29,6 +29,10 @@
         <div class="detail-info">
             <span class="detail-label">Hospital:</span> <span class="detail-value">{{.Hospital.Name}}</span>
         </div>
+        <div class="detail-info">
+            <span class="detail-label">Department:</span>
+            <span class="detail-value">{{.Department.Name}}</span>
+        </div>
 
         <form id="update-equipment-form" class="add-content-form">
             <h3>Update Equipment</h3>
@@ -45,6 +49,16 @@
             <select id="equipment-hospital-id" name="hospital_id" required>
                 <option value="{{.Hospital.id}}">{{.Hospital.Name}}</option>
             </select>
+            <br>
+            <label for="equipment-department-id">Department</label>
+            <select id="equipment-department-id" name="department_id" required>
+                <option value="{{.Department.id}}">{{.Department.Name}}</option>
+            </select>
+            <button type="button" id="show-add-department-form-btn">New Department</button>
+            <div id="add-department-form-modal" style="display:none; margin-top:0.5em;">
+                <input type="text" id="modal-department-name" name="modal-department-name" placeholder="Department Name">
+                <button type="button" id="submit-department-modal">Save Department</button>
+            </div>
             <br>
             <button type="submit" onclick="handleUpdateFormSubmit()">Update Equipment</button>
         </form>
@@ -115,6 +129,37 @@
                 setTimeout(function() {
                     popup.style.display = 'none';
                 }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
+            }
+
+            // Populate department select on focus
+            document.getElementById('equipment-department-id').addEventListener('focus', populateDepartmentSelect);
+
+            // Show/hide add department form
+            const showAddDeptBtn = document.getElementById('show-add-department-form-btn');
+            const addDeptForm = document.getElementById('add-department-form-modal');
+            if (showAddDeptBtn && addDeptForm) {
+                showAddDeptBtn.onclick = () => {
+                    addDeptForm.style.display = addDeptForm.style.display === 'none' ? '' : 'none';
+                };
+            }
+
+            // Submit new department
+            const submitDeptBtn = document.getElementById('submit-department-modal');
+            if (submitDeptBtn && addDeptForm) {
+                submitDeptBtn.onclick = async () => {
+                    const nameInput = document.getElementById('modal-department-name');
+                    if (!nameInput) return;
+                    const name = nameInput.value.trim();
+                    if (!name) return alert('Enter department name');
+                    await fetchWithAuth('/api/departments', {
+                        method: 'POST',
+                        body: JSON.stringify({ name }),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    await populateDepartmentSelect();
+                    addDeptForm.style.display = 'none';
+                    nameInput.value = '';
+                };
             }
         </script>
           

@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/miceremwirigi/mqs-backend/apis/auth"
+	"github.com/miceremwirigi/mqs-backend/apis/departments"
 	"github.com/miceremwirigi/mqs-backend/apis/engineers"
 	"github.com/miceremwirigi/mqs-backend/apis/equipments"
 	"github.com/miceremwirigi/mqs-backend/apis/hospitals"
@@ -100,4 +101,10 @@ func RegisterRoutes(app *fiber.App, db *gorm.DB) {
 	usersRoutes.Get("/username/:username", userHandler.GetUserByUsername)
 	usersRoutes.Put("/:id", userHandler.UpdateUser)
 	usersRoutes.Delete("/:id", userHandler.DeleteUser)
+
+	// --- Departments ---
+	departmentsHandler := departments.Handler{DB: db}
+	departmentsRoutes := api.Group("/departments")
+	departmentsRoutes.Get("/", departmentsHandler.GetAllDepartments)
+	departmentsRoutes.Post("/", departmentsHandler.AddDepartment)
 }

@@ -5,22 +5,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="/style.css">
-    <script src="/script.js"></script>
     <title>MQS</title>
 </head>
 
 <body>
+    <script src="/script.js"></script>
     <div class="header">
         <h1 class="title">MQS Inc.</h1>
         <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
 
         <nav class="menu-bar">
-            <a href="#" class="menu-link" style="float:left;" onclick="handleLogout()">Logout</a>
             <a href="#" class="menu-link" data-section="home-section">Home</a>
             <a href="#" class="menu-link" data-section="hospitals-section">Hospitals</a>
-            <a href="#" class="menu-link" data-section="equipments-section">Equipments</a>
+            <a href="#" class="menu-link" data-section="equipments-section">Equipment</a>
             <a href="#" class="menu-link" data-section="services-section">Services</a>
             <a href="#" class="menu-link" data-section="engineers-section">Engineers</a>
+            <a href="#" class="menu-link" style="float:right;" onclick="handleLogout()">Logout</a>
         </nav>
     </div>
     <div class="content">
@@ -37,6 +37,7 @@
                         <th>#</th>
                         <th>Hospital Name</th>
                         <th>Equipment</th>
+                        <th>Department</th>
                         <th>Contact</th>
                         <th>Last Service Date</th>
                         <th>Servicing Period (months)</th>
@@ -245,6 +246,7 @@
                         <th>Model</th>
                         <th>Servicing Interval</th>
                         <th>Hospital</th>
+                        <th>Department</th>
                     </tr>
                 </thead>
                 <tbody id="equipments-table-body">
@@ -269,6 +271,16 @@
                 <label for="equipment-hospital-id">Hospital</label>
                 <select id="equipment-hospital-id" name="hospital_id" required>
                 </select>
+                <br>
+                <label for="equipment-department-id">Department</label>
+                <select id="equipment-department-id" name="department_id" required>
+                    <!-- Options will be populated by JS -->
+                </select>
+                <button type="button" id="show-add-department-form-btn">New Department</button>
+                <div id="add-department-form-modal" style="display:none; margin-top:0.5em;">
+                    <input type="text" id="modal-department-name" name="modal-department-name" placeholder="Department Name">
+                    <button type="button" id="submit-department-modal">Save Department</button>
+                </div>
                 <br>
                 <button type="submit" onclick="handleAddEquipmentsButton()">Add Equipment</button>
             </form>
@@ -296,6 +308,25 @@
                         }
                     }
                 })
+
+                document.addEventListener('DOMContentLoaded', function() {
+                    const deptSelect = document.getElementById('equipment-department-id');
+                    if (deptSelect) {
+                        deptSelect.addEventListener('focus', populateDepartmentSelect);
+                    }
+
+                    // Add department logic
+                    document.getElementById('show-add-department-form-btn').onclick = async function() {
+                        const name = prompt('Enter new department name:');
+                        if (!name) return;
+                        await fetchWithAuth('/api/departments', {
+                            method: 'POST',
+                            body: JSON.stringify({ name }),
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        await populateDepartmentSelect();
+                    };
+                });
 
                 async function handleAddEquipmentsButton() {
                     const equipmentsForm = document.getElementById("add-equipment-form");
@@ -509,7 +540,6 @@
         <p>&copy; 2025 MQS. All rights reserved.</p>
     </div>
 </body>
-<script src="/script.js"></script>
 <script>
     // --- Global Variables ---
     var allHospitals = [];
@@ -525,6 +555,7 @@
             .then(data => {
                 const rows = data.data.map(equipment => {
                     const hospital = equipment.Hospital || {};
+                    const department = equipment.Department || {};
                     let lastServiceDate = '';
                     if (equipment.Services && equipment.Services.length > 0) {
                         lastServiceDate = equipment.Services
@@ -553,6 +584,7 @@
                     const rowHtml = `
                         <td>${hospital.Name || ''}</td>
                         <td>${equipment.Name || ''}</td>
+                        <td>${department.Name || ''}</td>
                         <td>${hospital.Phone || ''}</td>
                         <td>${lastServiceDate || 'N/A'}</td>
                         <td>${equipment.ServicingPeriod || 'N/A'}</td>
@@ -659,6 +691,7 @@
                     <td>${equipment.Model}</td>
                     <td>${equipment.ServicingPeriod}</td>
                     <td>${equipment.Hospital.Name}</td>
+                    <td>${equipment.Department ? equipment.Department.Name : ''}</td>
                 `;
                 newRow.setAttribute('data-href', `/api/equipments/details/${equipment.id}`);
                 newRow.addEventListener('click', function (event) {

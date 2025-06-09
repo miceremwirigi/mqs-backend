@@ -29,8 +29,10 @@ document.addEventListener("DOMContentLoaded", function() {
         function showSection(id) {
           sections.forEach(sec => sec.style.display = 'none');
           const target = document.getElementById(id);
-          target.style.display = 'block';
+          if (target) {
+            target.style.display = 'block';
             localStorage.setItem('activeSection', id);
+          }
         }
         menuLinks.forEach(link => {
           link.addEventListener('click', function(e) {
@@ -91,4 +93,44 @@ function showFailedMessage() {
 function handleLogout() {
     localStorage.removeItem('jwt_token');
     window.location.href = "login.html";
+}
+
+// Populate department select
+async function populateDepartmentSelect() {
+    const sel = document.getElementById('equipment-department-id');
+    sel.innerHTML = '';
+    const res = await fetchWithAuth('/api/departments');
+    (res.data || []).forEach(dept => {
+        const opt = document.createElement('option');
+        opt.value = dept.ID || dept.id;
+        opt.textContent = dept.Name || dept.name;
+        sel.appendChild(opt);
+    });
+}
+
+// Show/hide add department form
+const showAddDeptBtn = document.getElementById('show-add-department-form-btn');
+const addDeptForm = document.getElementById('add-department-form-modal');
+if (showAddDeptBtn && addDeptForm) {
+    showAddDeptBtn.onclick = () => {
+        addDeptForm.style.display = addDeptForm.style.display === 'none' ? '' : 'none';
+    };
+}
+
+const submitDeptBtn = document.getElementById('submit-department-modal');
+if (submitDeptBtn && addDeptForm) {
+    submitDeptBtn.onclick = async () => {
+        const nameInput = document.getElementById('modal-department-name');
+        if (!nameInput) return;
+        const name = nameInput.value;
+        if (!name) return alert('Enter department name');
+        await fetchWithAuth('/api/departments', {
+            method: 'POST',
+            body: JSON.stringify({ name }),
+            headers: { 'Content-Type': 'application/json' }
+        });
+        await populateDepartmentSelect();
+        addDeptForm.style.display = 'none';
+        nameInput.value = '';
+    };
 }

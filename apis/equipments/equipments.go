@@ -16,25 +16,19 @@ import (
 func (h *Handler) GetAllEquipments(c fiber.Ctx) error {
 	tx := h.DB.Begin()
 	if tx.Error != nil {
-		return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
-			"failed to begin transaction", nil)
+		return c.Status(500).JSON(fiber.Map{"error": tx.Error.Error()})
 	}
-
 	var equipments []models.Equipment
-	err := tx.Preload("Hospital").Preload("Services").Find(&equipments).Error
-	if err != nil {
-		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
-			"error getting equipments", err)
-	}
-
-	err = tx.Commit().Error
+	err := tx.Preload("Hospital").Preload("Department").Preload("Services").Find(&equipments).Error
 	if err != nil {
 		tx.Rollback()
-		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
-			"error committing transaction", err)
+		return c.Status(404).JSON(fiber.Map{"error": err.Error()})
 	}
-
-	return apis.GeneralApiResponse(c, apis.StatusOkResponseCode, "successfully retreived equipments", equipments)
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"data": equipments})
 }
 
 func (h *Handler) GetEquipment(c fiber.Ctx) error {
@@ -47,7 +41,7 @@ func (h *Handler) GetEquipment(c fiber.Ctx) error {
 	id := c.Params("id")
 
 	var equipment models.Equipment
-	err := tx.Preload("Hospital").Where("id = ?", id).Find(&equipment).Error
+	err := tx.Preload("Hospital").Preload("Department").Preload("Services").Where("id = ?", id).Find(&equipment).Error
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error retreiving equipment", err)
@@ -73,7 +67,7 @@ func (h *Handler) GetEquipmentHtml(c fiber.Ctx) error {
 	id := c.Params("id")
 
 	var equipment models.Equipment
-	err := tx.Preload("Hospital").Where("id = ?", id).Find(&equipment).Error
+	err := tx.Preload("Hospital").Preload("Department").Preload("Services").Where("id = ?", id).Find(&equipment).Error
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error retreiving equipment", err)
@@ -123,7 +117,7 @@ func (h *Handler) AddEquipment(c fiber.Ctx) error {
 		return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
 			"error decoding json to string", errors.New("error: error decoding json to string"))
 	}
-	// convert json strings to struc field types before create
+	// convert json strings to struct field types before create
 	for key, value := range dedodedJsonString {
 		if key == "servicing_period" {
 			equipment.ServicingPeriod, err = strconv.Atoi(value)
@@ -137,6 +131,13 @@ func (h *Handler) AddEquipment(c fiber.Ctx) error {
 			if err != nil {
 				return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
 					"error converting hospital_id string to uuid", errors.New("error: error converting hospital_id string to uuid"))
+			}
+		}
+		if key == "department_id" {
+			equipment.DepartmentID, err = uuid.ParseBytes([]byte(value))
+			if err != nil {
+				return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
+					"error converting department_id string to uuid", errors.New("error: error converting department_id string to uuid"))
 			}
 		}
 	}
@@ -168,7 +169,7 @@ func (h *Handler) UpdateEquipment(c fiber.Ctx) error {
 
 	// Fetch the existing equipment to update associations
 	var existingEquipment models.Equipment
-	if err := tx.Preload("Services").First(&existingEquipment, "id = ?", id).Error; err != nil {
+	if err := tx.Preload("Services").Preload("Department").First(&existingEquipment, "id = ?", id).Error; err != nil {
 		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"equipment not found", err.Error())
@@ -212,6 +213,20 @@ func (h *Handler) UpdateEquipment(c fiber.Ctx) error {
 				return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
 					"error updating services association", err.Error())
 			}
+		}
+	}
+	// Update department if provided
+	if value, ok := dedodedJsonString["department_id"]; ok {
+		existingEquipment.DepartmentID, err = uuid.ParseBytes([]byte(value))
+		if err != nil {
+			tx.Rollback()
+			return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
+				"error converting department_id string to uuid", errors.New("error: error converting department_id string to uuid"))
+		}
+		if err := tx.Model(&existingEquipment).Update("DepartmentID", existingEquipment.DepartmentID).Error; err != nil {
+			tx.Rollback()
+			return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
+				"error updating department association", err.Error())
 		}
 	}
 

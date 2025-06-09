@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/style.css">
+    <script src="/script.js"></script>
+    <title>Department Details - MQS</title>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">MQS Inc.</h1>
+        <h2 class="subtitle">Medical Equipment Service Scheduling</h2>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="department.html">Departments</a>
+            <a href="equipment.html">Equipment</a>
+            <a href="hospitals.html">Hospitals</a>
+            <a href="services.html">Services</a>
+        </nav>
+    </div>
+    <div class="content">
+        <div id="success-popup">Success</div>
+        <div id="failed-popup">Failed</div>
+
+        <div class="detail-info">
+            <span class="detail-label">Department Name:</span>
+            <span class="detail-value">{{.Name}}</span>
+        </div>
+        <div class="detail-info">
+            <span class="detail-label">ID:</span>
+            <span class="detail-value">{{.ID}}</span>
+        </div>
+        <!-- Optionally, list related equipments -->
+        {{if .Equipments}}
+        <div class="detail-info">
+            <span class="detail-label">Equipments:</span>
+            <span class="detail-value">
+                <ul>
+                {{range .Equipments}}
+                    <li>{{.Name}} (Model: {{.Model}})</li>
+                {{end}}
+                </ul>
+            </span>
+        </div>
+        {{end}}
+
+        <form id="update-department-form" class="add-content-form">
+            <h3>Update Department</h3>
+            <label for="department-name">Department Name</label>
+            <input type="text" id="department-name" name="name" value="{{.Name}}" required>
+            <br>
+            <button type="submit" onclick="handleUpdateDepartmentFormSubmit()">Update Department</button>
+        </form>
+
+        <span>
+            <button onclick="document.location='index.html'">Back</button>
+            <button onclick="toggleFormVisibility('update-department-form')">Edit</button>
+            <button onclick="deleteDepartment()">Delete</button>
+        </span>
+
+        <script>
+            const form = document.getElementById("update-department-form");
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+            });
+
+            function handleUpdateDepartmentFormSubmit() {
+                const form = document.getElementById("update-department-form");
+                const formData = new FormData(form);
+                const jsonObject = Object.fromEntries(formData.entries());
+                const jsonString = JSON.stringify(jsonObject);
+
+                fetchWithAuth(`/api/departments/{{.ID}}`, {
+                    method: "PUT",
+                    body: jsonString,
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(body => {
+                    showSuccessMessage();
+                })
+                .catch(error => {
+                    console.error(`Error updating department: ${error}`);
+                    showFailedMessage();
+                });
+
+                window.location.href = `/api/departments/details/{{.ID}}`;
+                hideInputForms();
+            }
+
+            function deleteDepartment() {
+                fetchWithAuth(`/api/departments/{{.ID}}`, {
+                    method: 'DELETE'
+                })
+                .then(data => {
+                    showSuccessMessage();
+                    window.location.href = "/index.html";
+                })
+                .catch(error => {
+                    console.error("Error deleting department:", error);
+                    showFailedMessage();
+                });
+            }
+        </script>
+
+        <p>For more information, please refer to the documentation.</p>
+        <p>Version: 1.0.0</p>
+    </div>
+    <div class="footer">
+        <p>&copy; 2025 MQS. All rights reserved.</p>
+    </div>
+</body>
+</html>
