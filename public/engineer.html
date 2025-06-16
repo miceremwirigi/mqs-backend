@@ -1,115 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="/style.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/style.css" />
     <script src="/script.js"></script>
     <title>MQS</title>
-</head>
-<body>
+  </head>
+  <body>
     <div class="header">
-        <h1 class="title">MQS Inc.</h1>
+      <h1 class="title">MQS Inc.</h1>
+
+      <nav class="menu-bar">
+        <a href="/index.html" class="menu-link">Home</a>
+        <a href="/index.html" class="menu-link">Hospitals</a>
+        <a href="/index.html" class="menu-link">Equipment</a>
+        <a href="/index.html" class="menu-link">Services</a>
+        <a href="/index.html" class="menu-link">Engineers</a>
+        <a href="#" class="menu-link" onclick="handleLogout()">Logout</a>
+      </nav>
+    </div>
+    <div class="content">
+      <div id="success-popup">Success</div>
+      <div id="failed-popup">Failed</div>
+
+      <div class="detail-info">
+        <span class="detail-label">Engineer Name:</span>
+        <span class="detail-value">{{.name}}</span>
+      </div>
+      <div class="detail-info">
+        <span class="detail-label">Contact:</span>
+        <span class="detail-value">{{.contact}}</span>
+      </div>
+
+      <span>
+        <button onclick="document.location='../../../index.html'">Back</button>
+        <button onclick="toggleFormVisibility(`update-engineer-form`)">
+          Edit
+        </button>
+        <button onclick="deleteEngineer()">Delete</button>
+      </span>
+
+      <form
+        id="update-engineer-form"
+        class="add-content-form"
+        style="display: none"
+      >
+        <h3>Add New Engineer</h3>
+        <label for="engineer-name">Engineer Name</label>
+        <input
+          type="text"
+          id="engineer-name"
+          name="name"
+          value="{{.name}}"
+          required
+        />
+        <br />
+        <label for="engineer-contact">Contact</label>
+        <input
+          type="text"
+          id="engineer-contact"
+          name="contact"
+          value="{{.contact}}"
+          required
+        />
+        <br />
+        <button type="submit" onclick="handleUpdateFormSubmit()">
+          Update Engineer
+        </button>
+      </form>
+
+      <div class="table-responsive">
+        <script>
+          const deleteEngineerUrl = "/api/engineers/delete/{{.id}}";
+
+          function deleteEngineer() {
+            fetchWithAuth(deleteEngineerUrl, {
+              method: "DELETE",
+            })
+              .then((data) => {
+                showSuccessMessage();
+                window.location.href = "/index.html";
+              })
+              .catch((error) => {
+                console.error("Error deleting engineer:", error);
+                showFailedMessage();
+              });
+          }
+
+          async function handleUpdateFormSubmit(event) {
+            event.preventDefault(); // Prevent default form submission behavior
+            const form = document.getElementById("update-engineer-form");
+            const formData = new FormData(form);
+
+            const jsonObject = Object.fromEntries(formData.entries());
+            const jsonString = JSON.stringify(jsonObject);
+
+            await fetchWithAuth(`/api/engineers/{{.id}}`, {
+              method: "PUT",
+              body: jsonString,
+            })
+              .then((body) => {
+                showSuccessMessage();
+              })
+              .catch((error) => {
+                console.error(`Error updating engineer: ${error}`);
+                showFailedMessage();
+              });
+
+            window.location.href = `/api/engineers/details/{{.id}}`;
+            hideInputForms();
+          }
+
+          function showSuccessMessage() {
+            const popup = document.getElementById("success-popup");
+            popup.style.display = "block";
+            setTimeout(function () {
+              popup.style.display = "none";
+            }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
+          }
+
+          function showFailedMessage() {
+            const popup = document.getElementById("failed-popup");
+            popup.style.display = "block";
+            setTimeout(function () {
+              popup.style.display = "none";
+            }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
+          }
+
+          // Attach the event listener to the form
+          document
+            .getElementById("update-engineer-form")
+            .addEventListener("submit", handleUpdateFormSubmit);
+        </script>
+
+        
         <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
+        <p>For more information, please refer to the documentation.</p>
+        <p>Version: 1.0.0</p>
+      </div>
+
+      <div class="footer">
+        <p>&copy; 2025 MQS. All rights reserved.</p>
+      </div>
     </div>
-    <div class="content"> 
-
-        <div id="success-popup">Success</div>
-        <div id="failed-popup">Failed</div>
-
-        <div class="detail-info">
-            <span class="detail-label">Engineer Name:</span> <span class="detail-value">{{.name}}</span>
-        </div>
-        <div class="detail-info">
-            <span class="detail-label">Contact:</span> <span class="detail-value">{{.contact}}</span>
-        </div>
-
-        <form id="update-engineer-form" class="add-content-form">
-            <h3>Add New Engineer</h3>
-            <label for="engineer-name">Engineer Name</label>
-            <input type="text" id="engineer-name" name="name" value="{{.name}}" required>
-            <br>
-            <label for="engineer-contact">Contact</label>
-            <input type="text" id="engineer-contact" name="contact" value="{{.contact}}" required>
-            <br>
-            <button type="submit" onclick="handleUpdateFormSubmit()">Update Engineer</button>
-        </form>
-
-        <span>
-            <button onclick="document.location='../../../index.html'">Back</button>
-            <button onclick="toggleFormVisibility(`update-engineer-form`)">Edit</button>
-            <button onclick="deleteEngineer()">Delete</button>
-        </span>
-
-        <div class="table-responsive">
-            <script>
-                const deleteEngineerUrl = "/api/engineers/delete/{{.id}}";
-
-                function deleteEngineer() {
-                    fetchWithAuth(deleteEngineerUrl, {
-                        method: 'DELETE',
-                    })
-                    .then(data => {
-                        showSuccessMessage();
-                        window.location.href = "/index.html";
-                    })
-                    .catch(error => {
-                        console.error("Error deleting engineer:", error);
-                        showFailedMessage();
-                    });
-                }
-
-                async function handleUpdateFormSubmit(event) {
-                    event.preventDefault(); // Prevent default form submission behavior
-                    const form = document.getElementById("update-engineer-form");
-                    const formData = new FormData(form);
-
-                    const jsonObject = Object.fromEntries(formData.entries());
-                    const jsonString = JSON.stringify(jsonObject);
-
-                    await fetchWithAuth(`/api/engineers/{{.id}}`, {
-                        method: "PUT",
-                        body: jsonString,
-                    })
-                    .then(body => {
-                        showSuccessMessage();
-                    })
-                    .catch(error => {
-                        console.error(`Error updating engineer: ${error}`);
-                        showFailedMessage();
-                    });
-
-                    window.location.href = `/api/engineers/details/{{.id}}`;
-                    hideInputForms();
-                }
-
-                function showSuccessMessage() {
-                    const popup = document.getElementById('success-popup');
-                    popup.style.display = 'block';
-                    setTimeout(function() {
-                        popup.style.display = 'none';
-                    }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
-                }
-
-                function showFailedMessage() {
-                    const popup = document.getElementById('failed-popup');
-                    popup.style.display = 'block';
-                    setTimeout(function() {
-                        popup.style.display = 'none';
-                    }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
-                }
-
-                // Attach the event listener to the form
-                document.getElementById("update-engineer-form").addEventListener("submit", handleUpdateFormSubmit);
-            </script>
-              
-            <p>For more information, please refer to the documentation.</p>
-            <p>Version: 1.0.0</p>
-        </div>
-
-        <div class="footer">
-            <p>&copy; 2025 MQS. All rights reserved.</p>
-        </div>
-    </div>
-</body>
+  </body>
 </html>

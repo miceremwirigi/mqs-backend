@@ -11,6 +11,7 @@ var (
 	StatusCreatedResponseCode             = 201
 	StatusNoContentResponseCode           = 204
 	StatusUnauthorizedResponseCode        = 401
+	StatusConflictResponseCode            = 409 // Added for duplicate/unique constraint
 )
 
 func GeneralApiResponse(c fiber.Ctx, statusCode int, message string, data any) error {

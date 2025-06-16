@@ -74,7 +74,7 @@ func (h *Handler) GetServiceHtml(c fiber.Ctx) error {
 	id := c.Params("id")
 
 	var service models.Service
-	err := tx.Preload("Equipments").Preload("Equipments.Hospital").
+	err := tx.Preload("Equipments").Preload("Equipments.Department").Preload("Equipments.Hospital").
 		Preload("Engineers").Where("id = ?", id).Find(&service).Error
 	if err != nil {
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
@@ -93,6 +93,11 @@ func (h *Handler) GetServiceHtml(c fiber.Ctx) error {
 		return apis.GeneralApiResponse(c, apis.StatusNotFoundResponseCode,
 			"error converting service struct to map", err)
 	}
+
+	equipmentsJSON, _ := json.Marshal(service.Equipments)
+	engineersJSON, _ := json.Marshal(service.Engineers)
+	serviceMap["EquipmentsJSON"] = string(equipmentsJSON)
+	serviceMap["EngineersJSON"] = string(engineersJSON)
 
 	responseFiberMap := fiber.Map(serviceMap)
 
