@@ -1,20 +1,26 @@
-var token = localStorage.getItem('jwt_token');
-
 function fetchWithAuth(url, options = {}) {
   const defaultHeaders = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + localStorage.getItem('jwt_token'),
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + localStorage.getItem('jwt_token'),
   };
   options.headers = { ...defaultHeaders, ...options.headers };
 
   return fetch(url, options)
-      .then(res => {
-          if (!res.ok) {
-              redirectToLoginIfUnauthorized(res);
-              throw new Error(`HTTP Error: Status ${res.status}`);
-          }
-          return res.json();
-      });
+    .then(async res => {
+      if (!res.ok) {
+        redirectToLoginIfUnauthorized(res);
+        // Try to parse error JSON, fallback to status text
+        let errorMsg = `HTTP Error: Status ${res.status}`;
+        try {
+          const errJson = await res.json();
+          errorMsg = errJson.message || errorMsg;
+        } catch (e) {
+          // ignore, fallback to generic errorMsg
+        }
+        throw new Error(errorMsg);
+      }
+      return res.json();
+    });
 }
 
 function redirectToLoginIfUnauthorized(response) {
@@ -22,33 +28,7 @@ function redirectToLoginIfUnauthorized(response) {
       localStorage.removeItem('jwt_token');
       window.location.href = '/login.html';
   }
-}   
-document.addEventListener("DOMContentLoaded", function() {
-        const menuLinks = document.querySelectorAll('.menu-link');
-        const sections = document.querySelectorAll('.main-section');
-        function showSection(id) {
-          sections.forEach(sec => sec.style.display = 'none');
-          const target = document.getElementById(id);
-          target.style.display = 'block';
-            localStorage.setItem('activeSection', id);
-        }
-        menuLinks.forEach(link => {
-          link.addEventListener('click', function(e) {
-            e.preventDefault();
-            showSection(this.dataset.section);
-          });
-        });
-        // Show the first section by default
-        const activeSection = localStorage.getItem('activeSection');
-        if (activeSection && document.getElementById(activeSection)) {
-          sections.forEach(sec => sec.style.display = 'none');
-          document.getElementById(activeSection).style.display = 'block';
-        } else {
-          if (sections[0]) {
-            sections[0].style.display = 'block';
-          }
-        }
-      });
+}
 
 var allHospitals = new Array;
 var allEngineers = new Array;
@@ -92,3 +72,19 @@ function handleLogout() {
     localStorage.removeItem('jwt_token');
     window.location.href = "login.html";
 }
+
+// Populate department select
+async function populateDepartmentSelect() {
+    const sel = document.getElementById('equipment-department-id');
+    sel.innerHTML = '';
+    const res = await fetchWithAuth('/api/departments');
+    (res.data || []).forEach(dept => {
+        const opt = document.createElement('option');
+        opt.value = dept.ID || dept.id;
+        opt.textContent = dept.Name || dept.name;
+        sel.appendChild(opt);
+    });
+}
+
+
+

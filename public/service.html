@@ -1,193 +1,213 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="/style.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/style.css" />
     <script src="/script.js"></script>
     <title>MQS</title>
-</head>
-<body>
+  </head>
+  <body>
     <div class="header">
-        <h1 class="title">MQS Inc.</h1>
-        <h2 class="subtitle">Medical Service Service Scheduling</h2>
+      <h1 class="title">MQS Inc.</h1>
+
+      <nav class="menu-bar">
+        <a href="/index.html" class="menu-link">Home</a>
+        <a href="/index.html" class="menu-link">Hospitals</a>
+        <a href="/index.html" class="menu-link">Equipment</a>
+        <a href="/index.html" class="menu-link">Services</a>
+        <a href="/index.html" class="menu-link">Engineers</a>
+        <a href="#" class="menu-link" onclick="handleLogout()">Logout</a>
+      </nav>
     </div>
 
     <div class="content">
-        <div id="success-popup">Success</div>
-        <div id="failed-popup">Failed</div>
-        <div id="services-section" class="main-section">
-            <div class="detail-info">
-                <span class="detail-label">Service Date:</span> <span id="service-date-display" class="detail-value"></span>
-            </div>
-            <div class="detail-info">
-                <span class="detail-label">Equipments:</span> 
-                <span class="detail-value">
-                    {{if .Equipments}}
-                        {{range $i, $e := .Equipments}}{{if $i}}, {{end}}{{$e.Name}}{{end}}
-                    {{else}}
-                        None
-                    {{end}}
-                </span>
-            </div>
-            <div class="detail-info">
-                <span class="detail-label">Engineers:</span> 
-                <span class="detail-value">
-                    {{if .Engineers}}
-                        {{range $i, $e := .Engineers}}{{if $i}}, {{end}}{{$e.name}}{{end}}
-                    {{else}}
-                        None
-                    {{end}}
-                </span>
-            </div>
+      <div id="success-popup">Success</div>
+      <div id="failed-popup">Failed</div>
+      <div id="loading-spinner">
+        <div class="spinner"></div>
+      </div>
 
-            <form id="update-service-form" class="add-content-form">
-                <h3>Edit Service</h3>
-                <label for="service-date">Service Date</label>
-                <input type="date" id="service-date" name="date" required>
-                <br>
-                <label for="service-equipments">Equipments</label>
-                <select id="service-equipments" name="equipments" required multiple></select>
-                <br>
-                <label for="service-engineers">Serviced By</label>
-                <select id="service-engineers" name="engineers" multiple></select>
-                <br>
-                <button type="submit">Update Service</button>
-            </form>
+      <div class="detail-info">
+        <span class="detail-label">Service Date:</span>
+        <span id="service-date-display" class="detail-value"> {{ .Date}}</span>
+      </div>
+      <div class="detail-info">
+        <span class="detail-label">Equipments:</span>
+        <span class="detail-value">
+          {{if .Equipments}} {{range $i, $e := .Equipments}}{{if $i}},
+          {{end}}{{$e.Name}}{{end}} {{else}} None {{end}}
+        </span>
+      </div>
+      <div class="detail-info">
+        <span class="detail-label">Engineers:</span>
+        <span class="detail-value">
+          {{if .Engineers}} {{range $i, $e := .Engineers}}{{if $i}},
+          {{end}}{{$e.name}}{{end}} {{else}} None {{end}}
+        </span>
+      </div>
 
-            <span>
-                <button onclick="document.location='../../../index.html'">Back</button>
-                <button onclick="toggleFormVisibility('update-service-form')">Edit</button>
-                <button onclick="deleteService()">Delete</button>
-            </span>
+      <span>
+        <button onclick="document.location='../../../index.html'">Back</button>
+        <button onclick="toggleFormVisibility('update-service-form')">
+          Edit
+        </button>
+        <button onclick="deleteService()">Delete</button>
+      </span>
 
-            <div class="table-responsive">
-                <table>
-                    <script>
-                        const token = localStorage.getItem('jwt_token');
-                        console.log("Service object received: {{.}}");
-                        hideInputForms();
-                        // Fetch all equipments and engineers for select options
-                        let allEquipments = [];
-                        const equipmentsUrl = "/api/equipments";
-                        const engineersUrl = "/api/engineers";
+      <form
+        id="update-service-form"
+        class="add-content-form"
+        style="display: none"
+      >
+        <h3>Edit Service</h3>
+        <label for="service-date">Service Date</label>
+        <input type="date" id="service-date" name="date" required />
+        <br />
+        <label for="service-equipments">Equipments</label>
+        <select
+          id="service-equipments"
+          name="equipments"
+          required
+          multiple
+        ></select>
+        <br />
+        <label for="service-engineers">Serviced By</label>
+        <select id="service-engineers" name="engineers" multiple></select>
+        <br />
+        <button type="submit">Update Service</button>
+      </form>
 
-                        function populateEquipmentsSelect(selectedEquipments) {
-                            const select = document.getElementById("service-equipments");
-                            select.innerHTML = '';
-                            allEquipments.forEach(eq => {
-                                const option = document.createElement('option');
-                                option.value = eq.id;
-                                option.textContent = eq.Name;
-                                if (selectedEquipments && selectedEquipments.includes(eq.id)) {
-                                    option.selected = true;
-                                }
-                                select.appendChild(option);
-                            });
-                        }
-
-                        function populateEngineersSelect(selectedEngineers) {
-                            const select = document.getElementById("service-engineers");
-                            select.innerHTML = '';
-                            allEngineers.forEach(eng => {
-                                const option = document.createElement('option');
-                                option.value = eng.id;
-                                option.textContent = eng.name;
-                                if (selectedEngineers && selectedEngineers.includes(eng.id)) {
-                                    option.selected = true;
-                                }
-                                select.appendChild(option);
-                            });
-                        }
-
-                        // Fetch and populate on page load
-                        fetchWithAuth(equipmentsUrl)
-                            .then(data => {
-                                allEquipments = data.data || [];
-                                // Optionally parse selected equipments from template variable
-                                populateEquipmentsSelect("{{.Equipments}}");
-                            });
-                        fetchWithAuth(engineersUrl)
-                            .then(data => {
-                                allEngineers = data.data || [];
-                                populateEngineersSelect("{{.Engineers}}");
-                            });
-
-                        // Format and display only the date part from .Date using JS
-                        document.addEventListener('DOMContentLoaded', function() {
-                            var dateRaw = "{{.Date}}";
-                            var dateOnly = dateRaw ? dateRaw.split('T')[0] : '';
-                            console.log(`Parsed date: ${dateOnly}`);
-                            document.getElementById('service-date').value = dateOnly; // Set the input value
-                            // Format the date for display
-                            var formatted = 'None';
-                            if (dateOnly) {
-                                var dateObj = new Date(dateOnly);
-                                formatted = dateObj.toDateString(); // e.g., Thu Apr 10 2025
-                            }
-                            document.getElementById('service-date-display').textContent = formatted;
-                        });
-
-                        document.getElementById("update-service-form").addEventListener("submit", handleUpdateFormSubmit);
-
-                        // Update Service logic
-                        async function handleUpdateFormSubmit(event) {
-                            event.preventDefault();
-                            const form = document.getElementById("update-service-form");
-                            const formData = new FormData(form);
-
-                            const equipments = Array.from(document.getElementById('service-equipments').selectedOptions).map(opt => opt.value);
-                            const engineers = Array.from(document.getElementById('service-engineers').selectedOptions).map(opt => opt.value);
-
-                            formData.set("equipments", equipments.join(','));
-                            formData.set("engineers", engineers.join(','));
-
-                            const jsonObject = Object.fromEntries(formData.entries());
-                            if (jsonObject.date) {
-                                const dateObj = new Date(jsonObject.date);
-                                jsonObject.date = dateObj.toISOString();
-                            }
-
-                            const jsonString = JSON.stringify(jsonObject);
-
-                            await fetchWithAuth(`/api/services/{{.id}}`, {
-                                method: "PUT",
-                                body: jsonString,
-                            })
-                            .then(body => {
-                                showSuccessMessage();
-                            })
-                            .catch(error => {
-                                console.error(`Error updating service: ${error}`);
-                                showFailedMessage();
-                            });
-
-                            hideInputForms();
-                        }
-
-                        // Delete Service logic
-                        function deleteService() {
-                            fetchWithAuth(`/api/services/delete/{{.id}}`, {
-                                method: 'DELETE',
-                            })
-                            .then(data => {
-                                showSuccessMessage();
-                                window.location.href = "/index.html";
-                            })
-                            .catch(error => {
-                                console.error("Error deleting service:", error);
-                                showFailedMessage();
-                            });
-                        }
-                    </script>
-                </table>
-            </div>
-            <p>For more information, please refer to the documentation.</p>
-            <p>Version: 1.0.0</p>
-        </div>
+      <p>For more information, please refer to the documentation.</p>
+      <p>Version: 1.0.0</p>
     </div>
+    <!-- end of .content -->
     <div class="footer">
-        <p>&copy; 2025 MQS. All rights reserved.</p>
+      <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
+      <p>&copy; 2025 MQS. All rights reserved.</p>
     </div>
-</body>
+    <script>
+      console.log("Service object received: {{.}}");
+      hideInputForms();
+      // Fetch all equipments and engineers for select options
+      equipmentsUrl = "/api/equipments";
+      engineersUrl = "/api/engineers";
+
+      function populateEquipmentsSelect(selectedEquipments = []) {
+        const select = document.getElementById("service-equipments");
+        select.innerHTML = "";
+        allEquipments.forEach((eq) => {
+          const option = document.createElement("option");
+          option.value = eq.id;
+          option.textContent = eq.Name + " (" + eq.Model + ")";
+          if (selectedEquipments.includes(eq.id)) {
+            option.selected = true;
+          }
+          select.appendChild(option);
+        });
+      }
+
+      function populateEngineersSelect(selectedEngineers) {
+        const select = document.getElementById("service-engineers");
+        select.innerHTML = "";
+        allEngineers.forEach((eng) => {
+          const option = document.createElement("option");
+          option.value = eng.id;
+          option.textContent = eng.name;
+          if (selectedEngineers && selectedEngineers.includes(eng.id)) {
+            option.selected = true;
+          }
+          select.appendChild(option);
+        });
+      }
+
+      // Fetch and populate on page load
+      fetchWithAuth(equipmentsUrl)
+        .then((data) => {
+          allEquipments = data.data || [];
+          populateEquipmentsSelect("{{.Equipments}}");
+          console.log("All equipments fetched:", allEquipments);
+        })
+        .catch((err) => {
+          console.error("Error fetching equipments:", err);
+        });
+      fetchWithAuth(engineersUrl).then((data) => {
+        allEngineers = data.data || [];
+        populateEngineersSelect("{{.Engineers}}");
+      });
+
+      // Format and display only the date part from .Date using JS
+      document.addEventListener("DOMContentLoaded", function () {
+        var dateRaw = "{{.Date}}";
+        var dateOnly = dateRaw ? dateRaw.split("T")[0] : "";
+        console.log(`Parsed date: ${dateOnly}`);
+        document.getElementById("service-date").value = dateOnly; // Set the input value
+        // Format the date for display
+        var formatted = "None";
+        if (dateOnly) {
+          var dateObj = new Date(dateOnly);
+          formatted = dateObj.toDateString(); // e.g., Thu Apr 10 2025
+        }
+        document.getElementById("service-date-display").textContent = formatted;
+      });
+
+      document
+        .getElementById("update-service-form")
+        .addEventListener("submit", handleUpdateFormSubmit);
+
+      // Update Service logic
+      async function handleUpdateFormSubmit(event) {
+        event.preventDefault();
+        const form = document.getElementById("update-service-form");
+        const formData = new FormData(form);
+
+        const equipments = Array.from(
+          document.getElementById("service-equipments").selectedOptions
+        ).map((opt) => opt.value);
+        const engineers = Array.from(
+          document.getElementById("service-engineers").selectedOptions
+        ).map((opt) => opt.value);
+
+        formData.set("equipments", equipments.join(","));
+        formData.set("engineers", engineers.join(","));
+
+        const jsonObject = Object.fromEntries(formData.entries());
+        if (jsonObject.date) {
+          const dateObj = new Date(jsonObject.date);
+          jsonObject.date = dateObj.toISOString();
+        }
+
+        const jsonString = JSON.stringify(jsonObject);
+
+        await fetchWithAuth(`/api/services/{{.id}}`, {
+          method: "PUT",
+          body: jsonString,
+        })
+          .then((body) => {
+            showSuccessMessage();
+          })
+          .catch((error) => {
+            console.error(`Error updating service: ${error}`);
+            showFailedMessage();
+          });
+
+        hideInputForms();
+      }
+
+      // Delete Service logic
+      function deleteService() {
+        fetchWithAuth(`/api/services/delete/{{.id}}`, {
+          method: "DELETE",
+        })
+          .then((data) => {
+            showSuccessMessage();
+            window.location.href = "/index.html";
+          })
+          .catch((error) => {
+            console.error("Error deleting service:", error);
+            showFailedMessage();
+          });
+      }
+    </script>
+  </body>
 </html>

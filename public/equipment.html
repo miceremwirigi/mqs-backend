@@ -10,12 +10,22 @@
 <body>
     <div class="header">
         <h1 class="title">MQS Inc.</h1>
-        <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
+        <nav class="menu-bar">
+          <a href="/index.html" class="menu-link">Home</a>
+          <a href="/index.html" class="menu-link">Hospitals</a>
+          <a href="/index.html" class="menu-link">Equipment</a>
+          <a href="/index.html" class="menu-link">Services</a>
+          <a href="/index.html" class="menu-link">Engineers</a>
+          <a href="#" class="menu-link" onclick="handleLogout()">Logout</a>
+        </nav>
     </div>
     <div class="content"> 
 
         <div id="success-popup">Success</div>
         <div id="failed-popup">Failed</div>
+      <div id="loading-spinner">
+        <div class="spinner"></div>
+      </div>
 
         <div class="detail-info">
             <span class="detail-label">Equipment Name:</span> <span class="detail-value">{{.Name}}</span>
@@ -29,9 +39,19 @@
         <div class="detail-info">
             <span class="detail-label">Hospital:</span> <span class="detail-value">{{.Hospital.Name}}</span>
         </div>
+        <div class="detail-info">
+            <span class="detail-label">Department:</span>
+            <span class="detail-value">{{.Department.Name}}</span>
+        </div>
 
-        <form id="update-equipment-form" class="add-content-form">
-            <h3>Update Equipment</h3>
+        <span>
+            <button onclick="document.location='../../../index.html'">Back</button>
+            <button onclick="toggleFormVisibility(`update-equipment-form`)">Edit</button>
+            <button onclick="deleteEquipment()">Delete</button>
+        </span>
+
+        <form id="update-equipment-form" class="add-content-form" style="display:none;">
+            <h3 style="color: black;">Update Equipment</h3>
             <label for="equipment-name">Equipment Name</label>
             <input type="text" id="equipment-name" name="name" value="{{.Name}}" required>
             <br>
@@ -46,22 +66,26 @@
                 <option value="{{.Hospital.id}}">{{.Hospital.Name}}</option>
             </select>
             <br>
+            <label for="equipment-department-id">Department</label>
+            <select id="equipment-department-id" name="department_id" required>
+                <option value="{{.Department.id}}">{{.Department.Name}}</option>
+            </select>
+            <button type="button" id="show-add-department-form-btn">New Department</button>
+            <div id="add-department-form-modal" style="display:none; margin-top:0.5em;">
+                <input type="text" id="modal-department-name" name="modal-department-name" placeholder="Department Name">
+                <button type="button" id="submit-department-modal">Save Department</button>
+            </div>
+            <br>
             <button type="submit" onclick="handleUpdateFormSubmit()">Update Equipment</button>
         </form>
 
-        <span>
-            <button onclick="document.location='../../../index.html'">Back</button>
-            <button onclick="toggleFormVisibility(`update-equipment-form`)">Edit</button>
-            <button onclick="deleteEquipment()">Delete</button>
-        </span>
-
         <script>
             const form = document.getElementById("update-equipment-form");
+            form.style.display = 'none';
             form.addEventListener( 'submit', async (event) => {
                     event.preventDefault();
                 })
 
-            const token = localStorage.getItem('jwt_token');
             const deleteEquipmentUrl = "/api/equipments/delete/{{.id}}";
 
             function deleteEquipment() {
@@ -116,6 +140,52 @@
                     popup.style.display = 'none';
                 }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
             }
+
+            // Populate department select on focus
+            document.getElementById('equipment-department-id').addEventListener('focus', populateDepartmentSelect);
+
+            // Show/hide add department form
+            const showAddDeptBtn = document.getElementById('show-add-department-form-btn');
+            if (showAddDeptBtn && addDeptForm) {
+                showAddDeptBtn.onclick = () => {
+                    addDeptForm.style.display = addDeptForm.style.display === 'none' ? '' : 'none';
+                };
+            }
+
+            // Submit new department
+            const submitDeptUpdateBtn = document.getElementById('submit-department-modal');
+            if (submitDeptUpdateBtn && addDeptForm) {
+                submitDeptUpdateBtn.onclick = async () => {
+                    const nameInput = document.getElementById('modal-department-name');
+                    if (!nameInput) return;
+                    const name = nameInput.value.trim();
+                    if (!name) return alert('Enter department name');
+                    await fetchWithAuth('/api/departments', {
+                        method: 'POST',
+                        body: JSON.stringify({ name }),
+                        headers: { 'Content-Type': 'application/json' }
+                    })
+              .then(res => {
+                if(!res.ok) return res.json()
+                  .then(data => { throw new Error(data.error);
+                });
+                return res.json();
+              })
+              .then(data => {
+                showSuccessMessage();
+              })
+              .catch(err => {
+                if (err.message.includes('unique')) {
+                  alert("Department already exists.");
+                } else {
+                  alert('Failed to add department: ');
+                }
+              });
+                await populateDepartmentSelect();
+                    addDeptForm.style.display = 'none';
+                    nameInput.value = '';
+                };
+            }
         </script>
           
         <p>For more information, please refer to the documentation.</p>
@@ -123,6 +193,7 @@
     </div>
 
     <div class="footer">
+        <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
         <p>&copy; 2025 MQS. All rights reserved.</p>
     </div>
 </body>
