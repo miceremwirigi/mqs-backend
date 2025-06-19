@@ -190,7 +190,7 @@ func (h *Handler) UpdateEquipment(c fiber.Ctx) error {
 	}
 
 	// Update scalar fields
-	if err := tx.Model(&existingEquipment).Updates(equipment).Error; err != nil {
+	if err := tx.Where("id = ?", id).Updates(equipment).Error; err != nil {
 		tx.Rollback()
 		return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
 			"error committing database transaction on equipment update", err.Error())
@@ -217,13 +217,13 @@ func (h *Handler) UpdateEquipment(c fiber.Ctx) error {
 	}
 	// Update department if provided
 	if value, ok := dedodedJsonString["department_id"]; ok {
-		existingEquipment.DepartmentID, err = uuid.ParseBytes([]byte(value))
+		equipment.DepartmentID, err = uuid.ParseBytes([]byte(value))
 		if err != nil {
 			tx.Rollback()
 			return apis.GeneralApiResponse(c, apis.StatusBadRequestResponseCode,
 				"error converting department_id string to uuid", errors.New("error: error converting department_id string to uuid"))
 		}
-		if err := tx.Model(&existingEquipment).Update("DepartmentID", existingEquipment.DepartmentID).Error; err != nil {
+		if err := tx.Where("id = ?", id).Updates(equipment).Error; err != nil {
 			tx.Rollback()
 			return apis.GeneralApiResponse(c, apis.StatusInternalServerErrorResponseCode,
 				"error updating department association", err.Error())
@@ -236,7 +236,7 @@ func (h *Handler) UpdateEquipment(c fiber.Ctx) error {
 			"error committing transaction", err.Error())
 	}
 
-	return apis.GeneralApiResponse(c, apis.StatusOkResponseCode, "successfully uptdated equipment", &existingEquipment)
+	return apis.GeneralApiResponse(c, apis.StatusOkResponseCode, "successfully uptdated equipment", equipment)
 }
 
 func (h *Handler) DeleteEquipment(c fiber.Ctx) error {

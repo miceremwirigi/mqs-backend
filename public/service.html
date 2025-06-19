@@ -186,6 +186,20 @@
           .then((body) => {
             showSuccessMessage();
           })
+              .then(() => {
+                fetch(`/api/services/details/{{.id}}`, {
+                  headers: {
+                    Authorization: "Bearer " + localStorage.getItem("jwt_token"),
+                  },
+                })
+                .then((response) => response.text())
+                .then((html) => {
+                  document.open();
+                  document.write(html);
+                  document.close();
+                })
+                .catch((error) => console.error("Error:", error));
+              })
           .catch((error) => {
             console.error(`Error updating service: ${error}`);
             showFailedMessage();

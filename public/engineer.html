@@ -23,6 +23,9 @@
     <div class="content">
       <div id="success-popup">Success</div>
       <div id="failed-popup">Failed</div>
+      <div id="loading-spinner">
+        <div class="spinner"></div>
+      </div>
 
       <div class="detail-info">
         <span class="detail-label">Engineer Name:</span>
@@ -65,15 +68,13 @@
           required
         />
         <br />
-        <button type="submit" onclick="handleUpdateFormSubmit()">
+        <button type="submit">
           Update Engineer
         </button>
       </form>
 
       <div class="table-responsive">
         <script>
-          const deleteEngineerUrl = "/api/engineers/delete/{{.id}}";
-
           function deleteEngineer() {
             fetchWithAuth(deleteEngineerUrl, {
               method: "DELETE",
@@ -103,12 +104,26 @@
               .then((body) => {
                 showSuccessMessage();
               })
+              .then(() => {
+                fetch(`/api/engineers/details/{{.id}}`, {
+                  headers: {
+                    Authorization: "Bearer " + localStorage.getItem("jwt_token"),
+                  },
+                })
+                .then((response) => response.text())
+                .then((html) => {
+                  document.open();
+                  document.write(html);
+                  document.close();
+                })
+                .catch((error) => console.error("Error:", error));
+                })
               .catch((error) => {
                 console.error(`Error updating engineer: ${error}`);
                 showFailedMessage();
               });
 
-            window.location.href = `/api/engineers/details/{{.id}}`;
+            // window.location.href = `/api/engineers/details/{{.id}}`;
             hideInputForms();
           }
 

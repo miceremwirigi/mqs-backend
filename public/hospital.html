@@ -23,6 +23,9 @@
     <div class="content">
       <div id="success-popup">Success</div>
       <div id="failed-popup">Failed</div>
+      <div id="loading-spinner">
+        <div class="spinner"></div>
+      </div>
 
       <div id="hospitals-section" class="main-section">
         <div class="detail-info">
@@ -77,7 +80,7 @@
             required
           />
           <br />
-          <button type="submit" onclick="handleUpdateFormSubmit()">
+          <button type="submit">
             Update Hospital
           </button>
         </form>
@@ -86,7 +89,6 @@
           document.getElementById("update-hospital-form").style.display =
             "none"; // hide form until the user clicks "Edit"
           document.getElementById("hospitals-section").style.display = "block";
-          const deleteHospitalUrl = "/api/hospitals/delete/{{.id}}";
 
           function deleteHospital() {
             fetchWithAuth(deleteHospitalUrl, {
@@ -117,12 +119,26 @@
               .then((body) => {
                 showSuccessMessage();
               })
+              .then(() => {
+                fetch(`/api/hospitals/details/{{.id}}`, {
+                  headers: {
+                    Authorization: "Bearer " + localStorage.getItem("jwt_token"),
+                  },
+                })
+                .then((response) => response.text())
+                .then((html) => {
+                  document.open();
+                  document.write(html);
+                  document.close();
+                })
+                .catch((error) => console.error("Error:", error));
+                })
               .catch((error) => {
                 console.error(`Error updating hospital: ${error}`);
                 showFailedMessage();
               });
 
-            window.location.href = `/api/hospitals/details/{{.id}}`;
+            // window.location.href = `/api/hospitals/details/{{.id}}`;
             hideInputForms();
           }
 

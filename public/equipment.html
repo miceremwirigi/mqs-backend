@@ -1,200 +1,265 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="/style.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/style.css" />
     <script src="/script.js"></script>
     <title>MQS</title>
-</head>
-<body>
+  </head>
+  <body>
     <div class="header">
-        <h1 class="title">MQS Inc.</h1>
-        <nav class="menu-bar">
-          <a href="/index.html" class="menu-link">Home</a>
-          <a href="/index.html" class="menu-link">Hospitals</a>
-          <a href="/index.html" class="menu-link">Equipment</a>
-          <a href="/index.html" class="menu-link">Services</a>
-          <a href="/index.html" class="menu-link">Engineers</a>
-          <a href="#" class="menu-link" onclick="handleLogout()">Logout</a>
-        </nav>
+      <h1 class="title">MQS Inc.</h1>
+      <nav class="menu-bar">
+        <a href="/index.html" class="menu-link">Home</a>
+        <a href="/index.html" class="menu-link">Hospitals</a>
+        <a href="/index.html" class="menu-link">Equipment</a>
+        <a href="/index.html" class="menu-link">Services</a>
+        <a href="/index.html" class="menu-link">Engineers</a>
+        <a href="#" class="menu-link" onclick="handleLogout()">Logout</a>
+      </nav>
     </div>
-    <div class="content"> 
-
-        <div id="success-popup">Success</div>
-        <div id="failed-popup">Failed</div>
+    <div class="content">
+      <div id="success-popup">Success</div>
+      <div id="failed-popup">Failed</div>
       <div id="loading-spinner">
         <div class="spinner"></div>
       </div>
 
-        <div class="detail-info">
-            <span class="detail-label">Equipment Name:</span> <span class="detail-value">{{.Name}}</span>
+      <div class="detail-info">
+        <span class="detail-label">Equipment Name:</span>
+        <span class="detail-value">{{.Name}}</span>
+      </div>
+      <div class="detail-info">
+        <span class="detail-label">Model:</span>
+        <span class="detail-value">{{.Model}}</span>
+      </div>
+      <div class="detail-info">
+        <span class="detail-label">Servicing Period:</span>
+        <span class="detail-value">{{.ServicingPeriod}}</span>
+      </div>
+      <div class="detail-info">
+        <span class="detail-label">Hospital:</span>
+        <span class="detail-value">{{.Hospital.Name}}</span>
+      </div>
+      <div class="detail-info">
+        <span class="detail-label">Department:</span>
+        <span class="detail-value">{{.Department.name}}</span>
+      </div>
+
+      <span>
+        <button onclick="document.location='../../../index.html'">Back</button>
+        <button onclick="toggleFormVisibility(`update-equipment-form`)">
+          Edit
+        </button>
+        <button onclick="deleteEquipment()">Delete</button>
+      </span>
+
+      <form
+        id="update-equipment-form"
+        class="add-content-form"
+        style="display: none"
+      >
+        <h3 style="color: black">Update Equipment</h3>
+        <label for="equipment-name">Equipment Name</label>
+        <input
+          type="text"
+          id="equipment-name"
+          name="name"
+          value="{{.Name}}"
+          required
+        />
+        <br />
+        <label for="equipment-model">Model</label>
+        <input
+          type="text"
+          id="equipment-model"
+          name="model"
+          value="{{.Model}}"
+          required
+        />
+        <br />
+        <label for="equipment-ServicingPeriod">Servicing Period</label>
+        <input
+          type="text"
+          id="equipment-ServicingPeriod"
+          name="ServicingPeriod"
+          value="{{.ServicingPeriod}}"
+          required
+        />
+        <br />
+        <label for="equipment-hospital-id">Hospital</label>
+        <select id="equipment-hospital-id" name="hospital_id" required>
+          <option value="{{.Hospital.id}}">{{.Hospital.Name}}</option>
+        </select>
+        <br />
+        <label for="equipment-department-id">Department</label>
+        <select id="equipment-department-id" name="department_id" required>
+          <option value="{{.Department.id}}">{{.Department.name}}</option>
+        </select>
+        <button type="button" id="show-add-department-form-btn-on-update">
+          New Department
+        </button>
+        <div
+          id="add-department-form-on-upadte"
+          style="display: none; margin-top: 0.5em"
+        >
+          <input
+            type="text"
+            id="modal-department-name"
+            name="modal-department-name"
+            placeholder="Department Name"
+          />
+          <button type="button" id="submit-department-on-equipment-update">
+            Save Department
+          </button>
         </div>
-        <div class="detail-info">
-            <span class="detail-label">Model:</span> <span class="detail-value">{{.Model}}</span>
-        </div>
-        <div class="detail-info">
-            <span class="detail-label">Servicing Period:</span> <span class="detail-value">{{.ServicingPeriod}}</span>
-        </div>
-        <div class="detail-info">
-            <span class="detail-label">Hospital:</span> <span class="detail-value">{{.Hospital.Name}}</span>
-        </div>
-        <div class="detail-info">
-            <span class="detail-label">Department:</span>
-            <span class="detail-value">{{.Department.Name}}</span>
-        </div>
+        <br />
+        <button type="submit" onclick="handleUpdateFormSubmit()">
+          Update Equipment
+        </button>
+      </form>
 
-        <span>
-            <button onclick="document.location='../../../index.html'">Back</button>
-            <button onclick="toggleFormVisibility(`update-equipment-form`)">Edit</button>
-            <button onclick="deleteEquipment()">Delete</button>
-        </span>
+      <script>
+        var updateEquipmentForm = document.getElementById(
+          "update-equipment-form"
+        );
+        updateEquipmentForm.style.display = "none";
+        updateEquipmentForm.addEventListener("submit", async (event) => {
+          event.preventDefault();
+        });
 
-        <form id="update-equipment-form" class="add-content-form" style="display:none;">
-            <h3 style="color: black;">Update Equipment</h3>
-            <label for="equipment-name">Equipment Name</label>
-            <input type="text" id="equipment-name" name="name" value="{{.Name}}" required>
-            <br>
-            <label for="equipment-model">Model</label>
-            <input type="text" id="equipment-model" name="model" value="{{.Model}}" required>
-            <br>
-            <label for="equipment-servicing-period">Servicing Period</label>
-            <input type="text" id="equipment-servicing-period" name="servicing-period" value="{{.ServicingPeriod}}" required>
-            <br>
-            <label for="equipment-hospital-id">Hospital</label>
-            <select id="equipment-hospital-id" name="hospital_id" required>
-                <option value="{{.Hospital.id}}">{{.Hospital.Name}}</option>
-            </select>
-            <br>
-            <label for="equipment-department-id">Department</label>
-            <select id="equipment-department-id" name="department_id" required>
-                <option value="{{.Department.id}}">{{.Department.Name}}</option>
-            </select>
-            <button type="button" id="show-add-department-form-btn">New Department</button>
-            <div id="add-department-form-modal" style="display:none; margin-top:0.5em;">
-                <input type="text" id="modal-department-name" name="modal-department-name" placeholder="Department Name">
-                <button type="button" id="submit-department-modal">Save Department</button>
-            </div>
-            <br>
-            <button type="submit" onclick="handleUpdateFormSubmit()">Update Equipment</button>
-        </form>
+        function deleteEquipment() {
+          fetchWithAuth(deleteEquipmentUrl, {
+            method: "DELETE",
+          })
+            .then((data) => {
+              showSuccessMessage();
+              window.location.href = "/index.html";
+            })
+            .catch((error) => {
+              console.error("Error deleting equipment:", error);
+              showFailedMessage();
+            });
+        }
 
-        <script>
-            const form = document.getElementById("update-equipment-form");
-            form.style.display = 'none';
-            form.addEventListener( 'submit', async (event) => {
-                    event.preventDefault();
-                })
+        async function handleUpdateFormSubmit() {
+          const updateEquipmentFormData = new FormData(updateEquipmentForm);
 
-            const deleteEquipmentUrl = "/api/equipments/delete/{{.id}}";
+          const jsonObject = Object.fromEntries(
+            updateEquipmentFormData.entries()
+          );
 
-            function deleteEquipment() {
-                fetchWithAuth(deleteEquipmentUrl, {
-                    method: 'DELETE',
-                })
-                .then(data => {
-                    showSuccessMessage();
-                    window.location.href = "/index.html";
-                })
-                .catch(error => {
-                    console.error("Error deleting equipment:", error);
-                    showFailedMessage();
-                });
-            }
+          jsonObject.ServicingPeriod = Number(jsonObject.ServicingPeriod);
+          const jsonString = JSON.stringify(jsonObject);
 
-            async function handleUpdateFormSubmit() {
-                const form = document.getElementById("update-equipment-form");
-                const formData = new FormData(form);
-
-                const jsonObject = Object.fromEntries(formData.entries());
-                const jsonString = JSON.stringify(jsonObject);
-
-                await fetchWithAuth(`/api/equipments/{{.id}}`, {
-                    method: "PUT",
-                    body: jsonString,
-                })
-                .then(body => {
-                    showSuccessMessage();
-                })
-                .catch(error => {
-                    console.error(`Error updating equipment: ${error}`);
-                    showFailedMessage();
-                });
-
-                window.location.href = `/api/equipments/details/{{.id}}`;
-                hideInputForms();
-            }
-
-            function showSuccessMessage() {
-                const popup = document.getElementById('success-popup');
-                popup.style.display = 'block';
-                setTimeout(function() {
-                    popup.style.display = 'none';
-                }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
-            }
-
-            function showFailedMessage() {
-                const popup = document.getElementById('failed-popup');
-                popup.style.display = 'block';
-                setTimeout(function() {
-                    popup.style.display = 'none';
-                }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
-            }
-
-            // Populate department select on focus
-            document.getElementById('equipment-department-id').addEventListener('focus', populateDepartmentSelect);
-
-            // Show/hide add department form
-            const showAddDeptBtn = document.getElementById('show-add-department-form-btn');
-            if (showAddDeptBtn && addDeptForm) {
-                showAddDeptBtn.onclick = () => {
-                    addDeptForm.style.display = addDeptForm.style.display === 'none' ? '' : 'none';
-                };
-            }
-
-            // Submit new department
-            const submitDeptUpdateBtn = document.getElementById('submit-department-modal');
-            if (submitDeptUpdateBtn && addDeptForm) {
-                submitDeptUpdateBtn.onclick = async () => {
-                    const nameInput = document.getElementById('modal-department-name');
-                    if (!nameInput) return;
-                    const name = nameInput.value.trim();
-                    if (!name) return alert('Enter department name');
-                    await fetchWithAuth('/api/departments', {
-                        method: 'POST',
-                        body: JSON.stringify({ name }),
-                        headers: { 'Content-Type': 'application/json' }
-                    })
-              .then(res => {
-                if(!res.ok) return res.json()
-                  .then(data => { throw new Error(data.error);
-                });
-                return res.json();
+          await fetchWithAuth(`/api/equipments/{{.id}}`, {
+            method: "PUT",
+            body: jsonString,
+          })
+            .then((body) => {
+              showSuccessMessage();
+            })
+            .then(() => {
+              fetch(`/api/equipments/details/{{.id}}`, {
+                headers: {
+                  Authorization: "Bearer " + localStorage.getItem("jwt_token"),
+                },
               })
-              .then(data => {
+                .then((response) => response.text())
+                .then((html) => {
+                  document.open();
+                  document.write(html);
+                  document.close();
+                })
+                .catch((error) => console.error("Error:", error));
+            })
+            .catch((error) => {
+              console.error(`Error updating equipment: ${error}`);
+              showFailedMessage();
+            });
+
+          // window.location.href = `/api/equipments/details/{{.id}}`;
+          hideInputForms();
+        }
+
+        function showSuccessMessage() {
+          const popup = document.getElementById("success-popup");
+          popup.style.display = "block";
+          setTimeout(function () {
+            popup.style.display = "none";
+          }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
+        }
+
+        function showFailedMessage() {
+          const popup = document.getElementById("failed-popup");
+          popup.style.display = "block";
+          setTimeout(function () {
+            popup.style.display = "none";
+          }, 3000); // Message disappears after 3 seconds (3000 milliseconds)
+        }
+
+        // Populate department select on focus
+        document
+          .getElementById("equipment-department-id")
+          .addEventListener("focus", populateDepartmentSelect);
+
+        // Show/hide add department form
+        var showAddDeptBtnOnUpdate = document.getElementById(
+          "show-add-department-form-btn-on-update"
+        );
+        var addDeptForm = document.getElementById(
+          "add-department-form-on-upadte"
+        );
+        if (showAddDeptBtnOnUpdate && addDeptForm) {
+          showAddDeptBtnOnUpdate.onclick = () => {
+            addDeptForm.style.display =
+              addDeptForm.style.display === "none" || "" ? "flex" : "none";
+          };
+        }
+
+        // Submit new department
+        const submitDeptUpdateBtn = document.getElementById(
+          "submit-department-on-equipment-update"
+        );
+        if (submitDeptUpdateBtn && addDeptForm) {
+          submitDeptUpdateBtn.onclick = async () => {
+            const nameInput = document.getElementById("modal-department-name");
+            if (!nameInput) return;
+            const name = nameInput.value.trim();
+            if (!name) return alert("Enter department name");
+            await fetchWithAuth("/api/departments", {
+              method: "POST",
+              body: JSON.stringify({ name }),
+              headers: { "Content-Type": "application/json" },
+            })
+              .then((data) => {
+                if (data && data.error) {
+                  throw new Error(data.error);
+                }
                 showSuccessMessage();
               })
-              .catch(err => {
-                if (err.message.includes('unique')) {
+              .catch((err) => {
+                if (err.message.includes("unique")) {
                   alert("Department already exists.");
                 } else {
-                  alert('Failed to add department: ');
+                  alert("Failed to add department: ");
                 }
               });
-                await populateDepartmentSelect();
-                    addDeptForm.style.display = 'none';
-                    nameInput.value = '';
-                };
-            }
-        </script>
-          
-        <p>For more information, please refer to the documentation.</p>
-        <p>Version: 1.0.0</p>
+            await populateDepartmentSelect();
+            addDeptForm.style.display = "none";
+            nameInput.value = "";
+          };
+        }
+      </script>
+
+      <p>For more information, please refer to the documentation.</p>
+      <p>Version: 1.0.0</p>
     </div>
 
     <div class="footer">
-        <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
-        <p>&copy; 2025 MQS. All rights reserved.</p>
+      <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
+      <p>&copy; 2025 MQS. All rights reserved.</p>
     </div>
-</body>
+  </body>
 </html>

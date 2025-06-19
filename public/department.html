@@ -22,6 +22,9 @@
     <div class="content">
         <div id="success-popup">Success</div>
         <div id="failed-popup">Failed</div>
+        <div id="loading-spinner">
+          <div class="spinner"></div>
+        </div>
 
         <div class="detail-info">
             <span class="detail-label">Department Name:</span>
@@ -79,12 +82,26 @@
                 .then(body => {
                     showSuccessMessage();
                 })
+              .then(() => {
+                fetch(`/api/departments/details/{{.id}}`, {
+                  headers: {
+                    Authorization: "Bearer " + localStorage.getItem("jwt_token"),
+                  },
+                })
+                .then((response) => response.text())
+                .then((html) => {
+                  document.open();
+                  document.write(html);
+                  document.close();
+                })
+                .catch((error) => console.error("Error:", error));
+                })
                 .catch(error => {
                     console.error(`Error updating department: ${error}`);
                     showFailedMessage();
                 });
 
-                window.location.href = `/api/departments/details/{{.ID}}`;
+                // window.location.href = `/api/departments/details/{{.ID}}`;
                 hideInputForms();
             }
 

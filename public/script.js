@@ -1,26 +1,28 @@
-function fetchWithAuth(url, options = {}) {
+
+var deleteEngineerUrl = "/api/engineers/delete/{{.id}}";
+var deleteHospitalUrl = "/api/hospitals/delete/{{.id}}";
+var deleteEquipmentUrl = "/api/equipments/delete/{{.id}}";
+
+async function fetchWithAuth(url, options = {}) {
   const defaultHeaders = {
     'Content-Type': 'application/json',
     'Authorization': 'Bearer ' + localStorage.getItem('jwt_token'),
   };
   options.headers = { ...defaultHeaders, ...options.headers };
 
-  return fetch(url, options)
-    .then(async res => {
-      if (!res.ok) {
-        redirectToLoginIfUnauthorized(res);
-        // Try to parse error JSON, fallback to status text
-        let errorMsg = `HTTP Error: Status ${res.status}`;
-        try {
-          const errJson = await res.json();
-          errorMsg = errJson.message || errorMsg;
-        } catch (e) {
-          // ignore, fallback to generic errorMsg
-        }
-        throw new Error(errorMsg);
-      }
-      return res.json();
-    });
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    redirectToLoginIfUnauthorized(res);
+    // Try to parse error JSON, fallback to status text
+    let errorMsg = `HTTP Error: Status ${res.status}`;
+    try {
+      const errJson = await res.json();
+      errorMsg = errJson.message || errorMsg;
+    } catch (e) {
+    }
+    throw new Error(errorMsg);
+  }
+  return await res.json();
 }
 
 function redirectToLoginIfUnauthorized(response) {
