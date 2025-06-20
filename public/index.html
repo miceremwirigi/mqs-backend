@@ -128,7 +128,7 @@
 
       <!------------------ Hospitals Section ------------------>
       <div id="hospitals-section" class="main-section">
-      <h2 class="sub-title">Hospitals</h2>
+        <h2 class="sub-title">Hospitals</h2>
         <table>
           <thead>
             <tr>
@@ -427,15 +427,11 @@
                 body: JSON.stringify({ name }),
                 headers: { "Content-Type": "application/json" },
               })
-                .then((res) => {
-                  if (!res.ok)
-                    return res.json().then((data) => {
-                      throw new Error(data.error);
-                    });
-                  return res.json();
-                })
                 .then((data) => {
-                  showSuccessMessage();
+                  if (data && data.error) {
+                    throw new Error(data.error);
+                    showSuccessMessage();
+                  }
                 })
                 .catch((err) => {
                   if (err.message.includes("unique")) {
@@ -1391,16 +1387,13 @@
         body: JSON.stringify({ name }),
         headers: { "Content-Type": "application/json" },
       })
-        .then((res) => {
-          if (!res.ok)
-            return res.json().then((data) => {
-              throw new Error(data.error);
-            });
-          return res.json();
-        })
         .then((data) => {
-          showSuccessMessage();
-        })
+          if (data && data.error){
+            throw new Error(data.error);
+            showSuccessMessage();
+
+            };     
+          })
         .catch((err) => {
           if (err.message.includes("unique")) {
             alert("Department already exists.");
@@ -1468,6 +1461,20 @@
           method: "POST",
           body: JSON.stringify({ name }),
           headers: { "Content-Type": "application/json" },
+        })
+        .then((data) => {
+          if (data && data.error){
+            throw new Error(data.error);
+            showSuccessMessage();
+
+            };     
+          })
+        .catch((err) => {
+          if (err.message.includes("unique")) {
+            alert("Department already exists.");
+          } else {
+            alert("Failed to add department: " + err.message);
+          }
         });
         await populateDepartmentSelect();
         addDeptForm.style.display = "none";
