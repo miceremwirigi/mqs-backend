@@ -1,4 +1,3 @@
-
 var deleteEngineerUrl = "/api/engineers/delete/{{.id}}";
 var deleteHospitalUrl = "/api/hospitals/delete/{{.id}}";
 var deleteEquipmentUrl = "/api/equipments/delete/{{.id}}";
@@ -87,6 +86,28 @@ async function populateDepartmentSelect() {
         sel.appendChild(opt);
     });
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+    const dropbtn = document.querySelector('.menu-bar .dropbtn');
+    const dropdownContent = document.querySelector('.menu-bar .dropdown-content');
+    dropbtn.addEventListener('click', function (e) {
+      // Only toggle on small screens
+      if (window.innerWidth <= 700) {
+        e.preventDefault();
+        dropdownContent.classList.toggle('active');
+      }
+    });
+    // Optional: Hide menu when clicking outside
+    document.addEventListener('click', function (e) {
+      if (
+        window.innerWidth <= 700 &&
+        !dropdownContent.contains(e.target) &&
+        !dropbtn.contains(e.target)
+      ) {
+        dropdownContent.classList.remove('active');
+      }
+    });
+  });
 
 
 
