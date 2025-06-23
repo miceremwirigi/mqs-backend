@@ -11,7 +11,7 @@
     <div class="header">
       <h1 class="title">MQS Inc.</h1>
       <nav class="menu-bar">
-        <a href="/index.html" class="menu-link">Home</a>
+        <a href="/index.html" class="menu-link">History</a>
         <a href="/index.html" class="menu-link">Hospitals</a>
         <a href="/index.html" class="menu-link">Equipment</a>
         <a href="/index.html" class="menu-link">Services</a>
@@ -52,7 +52,9 @@
         <button onclick="toggleFormVisibility(`update-equipment-form`)">
           Edit
         </button>
-        <button onclick="deleteEquipment()">Delete</button>
+        <button onclick="confirmDelete(() => deleteEquipment('{{.id}}'))">
+          Delete
+        </button>
       </span>
 
       <form
@@ -129,12 +131,13 @@
           event.preventDefault();
         });
 
-        function deleteEquipment() {
-          fetchWithAuth(deleteEquipmentUrl, {
+        function deleteEquipment(id) {
+          fetchWithAuth(`/api/equipments/delete/${id}`, {
             method: "DELETE",
           })
             .then((data) => {
               showSuccessMessage();
+              invalidateEquipmentsCache();
               window.location.href = "/index.html";
             })
             .catch((error) => {
@@ -178,7 +181,7 @@
               console.error(`Error updating equipment: ${error}`);
               showFailedMessage();
             });
-
+          invalidateEquipmentsCache();
           // window.location.href = `/api/equipments/details/{{.id}}`;
           hideInputForms();
         }

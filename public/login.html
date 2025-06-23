@@ -1,186 +1,228 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="style.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
     <script src="script.js"></script>
     <title>MQS</title>
     <style>
-            .content {
-                max-width: 420px;
-                margin: 2.5rem auto 0 auto;
-                background: #fff;
-                border-radius: 14px;
-                box-shadow: 0 2px 16px rgba(44, 62, 80, 0.10);
-                padding: 2.2rem 2rem 1.5rem 2rem;
-            }
+      .content {
+        max-width: 420px;
+        margin: 2.5rem auto 0 auto;
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 2px 16px rgba(44, 62, 80, 0.1);
+        padding: 2.2rem 2rem 1.5rem 2rem;
+      }
 
-            .error-message {
-                color: #e53e3e;
-                font-size: 0.97rem;
-                min-height: 1.2em;
-                display: block;
-                text-align: center;
-            }
+      .error-message {
+        color: #e53e3e;
+        font-size: 0.97rem;
+        min-height: 1.2em;
+        display: block;
+        text-align: center;
+      }
 
-            #success-popup, #failed-popup {
-                display: none;
-                position: fixed;
-                top: 1.5rem;
-                left: 50%;
-                transform: translateX(-50%);
-                min-width: 180px;
-                padding: 0.8rem 1.2rem;
-                border-radius: 6px;
-                font-size: 1.1rem;
-                font-weight: 500;
-                text-align: center;
-                z-index: 1000;
-            }
+      #success-popup,
+      #failed-popup {
+        display: none;
+        position: fixed;
+        top: 1.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        min-width: 180px;
+        padding: 0.8rem 1.2rem;
+        border-radius: 6px;
+        font-size: 1.1rem;
+        font-weight: 500;
+        text-align: center;
+        z-index: 1000;
+      }
 
-            #success-popup {
-                background: #38a169;
-                color: #fff;
-            }
+      #success-popup {
+        background: #38a169;
+        color: #fff;
+      }
 
-            #failed-popup {
-                background: #e53e3e;
-                color: #fff;
-            }
+      #failed-popup {
+        background: #e53e3e;
+        color: #fff;
+      }
 
-            .footer {
-                text-align: center;
-                color: #718096;
-                font-size: 0.95rem;
-                margin: 2.5rem 0 1rem 0;
-            }
+      .footer {
+        text-align: center;
+        color: #718096;
+        font-size: 0.95rem;
+        margin: 2.5rem 0 1rem 0;
+      }
 
-            /* Responsive adjustments */
-            @media (max-width: 500px) {
-                .content {
-                    max-width: 98vw;
-                    padding: 1.2rem 0.5rem 1rem 0.5rem;
-                }
-                .header {
-                    padding: 1.2rem 0 0.7rem 0;
-                }
-                .login-image img {
-                    width: 120px !important;
-                }
-            }
-        </style>
-</head>
-<body>
+      /* Responsive adjustments */
+      @media (max-width: 500px) {
+        .content {
+          max-width: 98vw;
+          padding: 1.2rem 0.5rem 1rem 0.5rem;
+        }
+        .header {
+          padding: 1.2rem 0 0.7rem 0;
+        }
+        .login-image img {
+          width: 120px !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
     <div class="header">
-        <h1 class="title">MQS Inc.</h1>
-        <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
+      <h1 class="title">MQS Inc.</h1>
     </div>
-    <div class="content"> 
-
-        <div id="success-popup">Success</div>
-        <div id="failed-popup">Failed</div>
-        <div id="login-section" class="auth-section">  
-            <div class="login-header">
-                <h3>Login to your account</h3>
-            </div>
-            <div class="login-image">
-                <img src="login-image.webp" alt="Login Image" style="width: 100px; height: auto;">
-            </div>
-            <form id="login-form" class="login-form">
-                <h3>Login Form</h3>
-                <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required autocomplete="username">
-                <br>
-                <label for="password">Password:</label>
-                <input type="password" id="password" required autocomplete="current-password">
-                <br>
-                <div style="display: flex; align-items: center; gap: 0.5em; margin-bottom: 0.5em;">
-                    <input type="checkbox" id="remember-me" name="remember-me" style="margin: 0;">
-                    <label for="remember-me" style="margin: 0; font-weight: 500; color: #2a4365;">Remember Me</label>
-                </div>
-                <br>
-                <span class="error-message" id="error-message"></span>
-            </form>
-            <div class="login-links">
-                <a href="register.html">Register</a>
-                <span> | </span>
-                <a href="index.html">Back to Home</a>
-            </div>
-            <button type="submit" onclick="handleLogin()">Login</button>
-            <div class="login-description">
-                <p>MQS Inc. provides a comprehensive platform for managing medical equipment service scheduling.</p>
-                <p>Login to access your account and manage your services efficiently.</p>
-                <p>If you don't have an account, please register.</p>
-            </div>
+    <div class="content">
+      <div id="success-popup">Success</div>
+      <div id="failed-popup">Failed</div>
+      <div id="login-section" class="auth-section">
+        <div class="login-header">
+          <h3>Login to your account</h3>
         </div>
+        <div class="login-image">
+          <img
+            src="login-image.webp"
+            alt="Login Image"
+            style="width: 100px; height: auto"
+          />
+        </div>
+        <form id="login-form" class="login-form">
+          <h3>Login Form</h3>
+          <label for="username">Username:</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            required
+            autocomplete="username"
+          />
+          <br />
+          <label for="password">Password:</label>
+          <input
+            type="password"
+            id="password"
+            required
+            autocomplete="current-password"
+          />
+          <br />
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 0.5em;
+              margin-bottom: 0.5em;
+            "
+          >
+            <input
+              type="checkbox"
+              id="remember-me"
+              name="remember-me"
+              style="margin: 0"
+            />
+            <label
+              for="remember-me"
+              style="margin: 0; font-weight: 500; color: #2a4365"
+              >Remember Me</label
+            >
+          </div>
+          <br />
+          <span class="error-message" id="error-message"></span>
+        </form>
+        <div class="login-links">
+          <a href="register.html">Register</a>
+          <span> | </span>
+          <a href="index.html">Back to History</a>
+        </div>
+        <button type="submit" onclick="handleLogin()">Login</button>
+        <div class="login-description">
+          <p>
+            MQS Inc. provides a comprehensive platform for managing medical
+            equipment service scheduling.
+          </p>
+          <p>
+            Login to access your account and manage your services efficiently.
+          </p>
+          <p>If you don't have an account, please register.</p>
+        </div>
+      </div>
     </div>
     <div class="footer">
-        <p>&copy; 2025 MQS. All rights reserved.</p>
+      <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
+      <p>&copy; 2025 MQS. All rights reserved.</p>
     </div>
 
     <script>
-async function handleLogin(event) {
-    // Prevent default form submission
-    if (event) event.preventDefault();
+      async function handleLogin(event) {
+        // Prevent default form submission
+        if (event) event.preventDefault();
 
-    // Get username and password values
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value;
+        // Get username and password values
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
 
-    // Basic validation
-    if (!username || !password) {
-        showFailedMessage("Please enter both username and password.");
-        return;
-    }
-
-    try {
-        // Send login request
-        const response = await fetch('/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-
-        if (!response.ok) {
-            showFailedMessage("Login failed. Check your credentials.");
-            return;
+        // Basic validation
+        if (!username || !password) {
+          showFailedMessage("Please enter both username and password.");
+          return;
         }
 
-        const data = await response.json();
-        if (data.token) {
+        try {
+          // Send login request
+          const response = await fetch("/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+
+          if (!response.ok) {
+            showFailedMessage("Login failed. Check your credentials.");
+            return;
+          }
+
+          const data = await response.json();
+          if (data.token) {
             // Save JWT token to localStorage
-            localStorage.setItem('jwt_token', data.token);
+            localStorage.setItem("jwt_token", data.token);
 
             showSuccessMessage("Login successful!");
             // Redirect to main page after short delay
             setTimeout(() => {
-                window.location.href = "index.html";
+              window.location.href = "index.html";
             }, 1000);
-        } else {
+          } else {
             showFailedMessage("Login failed. No token received.");
+          }
+        } catch (err) {
+          showFailedMessage("Network or server error.");
         }
-    } catch (err) {
-        showFailedMessage("Network or server error.");
-    }
-}
+      }
 
-// Attach handler to form submit
-document.getElementById('login-form').addEventListener('submit', handleLogin);
+      // Attach handler to form submit
+      document
+        .getElementById("login-form")
+        .addEventListener("submit", handleLogin);
 
-// Utility functions for showing messages
-function showSuccessMessage(msg) {
-    const popup = document.getElementById('success-popup');
-    popup.textContent = msg || "Success";
-    popup.style.display = 'block';
-    setTimeout(() => { popup.style.display = 'none'; }, 2000);
-}
-function showFailedMessage(msg) {
-    const popup = document.getElementById('failed-popup');
-    popup.textContent = msg || "Failed";
-    popup.style.display = 'block';
-    setTimeout(() => { popup.style.display = 'none'; }, 2000);
-}
-</script>
-</body>
+      // Utility functions for showing messages
+      function showSuccessMessage(msg) {
+        const popup = document.getElementById("success-popup");
+        popup.textContent = msg || "Success";
+        popup.style.display = "block";
+        setTimeout(() => {
+          popup.style.display = "none";
+        }, 2000);
+      }
+      function showFailedMessage(msg) {
+        const popup = document.getElementById("failed-popup");
+        popup.textContent = msg || "Failed";
+        popup.style.display = "block";
+        setTimeout(() => {
+          popup.style.display = "none";
+        }, 2000);
+      }
+    </script>
+  </body>
 </html>
