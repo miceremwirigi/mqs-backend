@@ -1,4 +1,3 @@
-
 var deleteEngineerUrl = "/api/engineers/delete/{{.id}}";
 var deleteHospitalUrl = "/api/hospitals/delete/{{.id}}";
 var deleteEquipmentUrl = "/api/equipments/delete/{{.id}}";
@@ -86,6 +85,42 @@ async function populateDepartmentSelect() {
         opt.textContent = dept.Name || dept.name;
         sel.appendChild(opt);
     });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const dropdown = document.querySelector('.menu-bar .dropdown');
+  const dropbtn = dropdown.querySelector('.dropbtn');
+  const dropdownContent = dropdown.querySelector('.dropdown-content');
+  const closeBtn = document.getElementById('dropdown-close-btn');
+  dropbtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    dropdown.classList.toggle('active');
+  });
+  // Hide dropdown-content when a menu link is clicked (on all screens)
+  const menuLinks = dropdownContent.querySelectorAll('.menu-link');
+  menuLinks.forEach(link => {
+    link.addEventListener('click', function () {
+      dropdown.classList.remove('active');
+    });
+  });
+  // Hide dropdown-content when X is clicked
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function () {
+      dropdown.classList.remove('active');
+    });
+  }
+  // Hide dropdown-content when clicking outside
+  document.addEventListener('click', function (e) {
+    if (!dropdown.contains(e.target)) {
+      dropdown.classList.remove('active');
+    }
+  });
+});
+
+function invalidateEquipmentsCache() {
+  equipmentsCache = null;
+  equipmentsCacheTime = 0;
+  equipmentsCachePromise = null;
 }
 
 
