@@ -12,7 +12,7 @@
       <h1 class="title">MQS Inc.</h1>
 
       <nav class="menu-bar">
-        <a href="/index.html" class="menu-link">Home</a>
+        <a href="/index.html" class="menu-link">History</a>
         <a href="/index.html" class="menu-link">Hospitals</a>
         <a href="/index.html" class="menu-link">Equipment</a>
         <a href="/index.html" class="menu-link">Services</a>
@@ -41,7 +41,9 @@
         <button onclick="toggleFormVisibility(`update-engineer-form`)">
           Edit
         </button>
-        <button onclick="deleteEngineer()">Delete</button>
+        <button onclick="confirmDelete(() => deleteEngineer('{{.id}}'))">
+          Delete
+        </button>
       </span>
 
       <form
@@ -68,15 +70,13 @@
           required
         />
         <br />
-        <button type="submit">
-          Update Engineer
-        </button>
+        <button type="submit">Update Engineer</button>
       </form>
 
       <div class="table-responsive">
         <script>
-          function deleteEngineer() {
-            fetchWithAuth(deleteEngineerUrl, {
+          function deleteEngineer(id) {
+            fetchWithAuth(`/api/engineers/delete/${id}`, {
               method: "DELETE",
             })
               .then((data) => {
@@ -107,17 +107,18 @@
               .then(() => {
                 fetch(`/api/engineers/details/{{.id}}`, {
                   headers: {
-                    Authorization: "Bearer " + localStorage.getItem("jwt_token"),
+                    Authorization:
+                      "Bearer " + localStorage.getItem("jwt_token"),
                   },
                 })
-                .then((response) => response.text())
-                .then((html) => {
-                  document.open();
-                  document.write(html);
-                  document.close();
-                })
-                .catch((error) => console.error("Error:", error));
-                })
+                  .then((response) => response.text())
+                  .then((html) => {
+                    document.open();
+                    document.write(html);
+                    document.close();
+                  })
+                  .catch((error) => console.error("Error:", error));
+              })
               .catch((error) => {
                 console.error(`Error updating engineer: ${error}`);
                 showFailedMessage();
@@ -149,7 +150,6 @@
             .addEventListener("submit", handleUpdateFormSubmit);
         </script>
 
-        
         <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
         <p>For more information, please refer to the documentation.</p>
         <p>Version: 1.0.0</p>

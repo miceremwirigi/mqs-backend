@@ -12,7 +12,7 @@
       <h1 class="title">MQS Inc.</h1>
 
       <nav class="menu-bar">
-        <a href="/index.html" class="menu-link">Home</a>
+        <a href="/index.html" class="menu-link">History</a>
         <a href="/index.html" class="menu-link">Hospitals</a>
         <a href="/index.html" class="menu-link">Equipment</a>
         <a href="/index.html" class="menu-link">Services</a>
@@ -48,7 +48,9 @@
           <button onclick="toggleFormVisibility(`update-hospital-form`)">
             Edit
           </button>
-          <button onclick="deleteHospital()">Delete</button>
+          <button onclick="confirmDelete(() => deleteHospital('{{.id}}'))">
+            Delete
+          </button>
         </span>
 
         <form id="update-hospital-form" class="add-content-form">
@@ -80,9 +82,7 @@
             required
           />
           <br />
-          <button type="submit">
-            Update Hospital
-          </button>
+          <button type="submit">Update Hospital</button>
         </form>
 
         <script>
@@ -90,12 +90,13 @@
             "none"; // hide form until the user clicks "Edit"
           document.getElementById("hospitals-section").style.display = "block";
 
-          function deleteHospital() {
-            fetchWithAuth(deleteHospitalUrl, {
+          function deleteHospital(id) {
+            fetchWithAuth(`/api/hospitals/delete/${id}`, {
               method: "DELETE",
             })
               .then((data) => {
                 showSuccessMessage();
+                invalidateEquipmentsCache();
                 window.location.href = "/index.html";
               })
               .catch((error) => {
@@ -118,21 +119,23 @@
             })
               .then((body) => {
                 showSuccessMessage();
+                invalidateEquipmentsCache();
               })
               .then(() => {
                 fetch(`/api/hospitals/details/{{.id}}`, {
                   headers: {
-                    Authorization: "Bearer " + localStorage.getItem("jwt_token"),
+                    Authorization:
+                      "Bearer " + localStorage.getItem("jwt_token"),
                   },
                 })
-                .then((response) => response.text())
-                .then((html) => {
-                  document.open();
-                  document.write(html);
-                  document.close();
-                })
-                .catch((error) => console.error("Error:", error));
-                })
+                  .then((response) => response.text())
+                  .then((html) => {
+                    document.open();
+                    document.write(html);
+                    document.close();
+                  })
+                  .catch((error) => console.error("Error:", error));
+              })
               .catch((error) => {
                 console.error(`Error updating hospital: ${error}`);
                 showFailedMessage();

@@ -1,7 +1,3 @@
-var deleteEngineerUrl = "/api/engineers/delete/{{.id}}";
-var deleteHospitalUrl = "/api/hospitals/delete/{{.id}}";
-var deleteEquipmentUrl = "/api/equipments/delete/{{.id}}";
-
 async function fetchWithAuth(url, options = {}) {
   const defaultHeaders = {
     'Content-Type': 'application/json',
