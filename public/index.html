@@ -42,9 +42,9 @@
       <div id="loading-spinner">
         <div class="spinner"></div>
       </div>
-      <!---------------------------- Home Section ------------------------->
-      <div id="home-section" class="main-section">
-        <h2 class="sub-title">Homepage</h2>
+      <!---------------------------- History Section ------------------------->
+      <div id="History-section" class="main-section">
+        <h2 class="sub-title">Historye</h2>
         <table>
           <thead>
             <tr>
@@ -473,6 +473,8 @@
                 console.error(`"error adding equipment: ${error}`);
                 showFailedMessage();
               });
+            // Invalidate cache after adding new equipment
+            invalidateEquipmentsCache();
             window.location.href = "/index.html";
             hideInputForms();
           }
@@ -845,65 +847,89 @@
     var allEngineers = [];
     var allEquipments = [];
 
+    // Use this cache for all equipment fetches
+    let equipmentsCache = null;
+    let equipmentsCacheTime = 0;
+    let equipmentsCachePromise = null;
+    const EQUIPMENTS_CACHE_TTL = 60 * 1000; // 1 minute cache
+
+    async function getAllEquipments() {
+      const now = Date.now();
+      if (equipmentsCache && now - equipmentsCacheTime < EQUIPMENTS_CACHE_TTL) {
+        return equipmentsCache;
+      }
+      if (equipmentsCachePromise) {
+        // If a fetch is already in progress, wait for it
+        return equipmentsCachePromise;
+      }
+      // Start the fetch and store the promise immediately
+      equipmentsCachePromise = fetchWithAuth("/api/equipments").then((data) => {
+        equipmentsCache = data.data || [];
+        equipmentsCacheTime = Date.now();
+        equipmentsCachePromise = null; // Reset promise after fetch completes
+        return equipmentsCache;
+      });
+      return equipmentsCachePromise;
+    }
+
     // --- Section: Table and Details Auto-Refresh Logic ---
-    async function refreshHomeTable() {
+    async function refreshHistoryTable() {
       const tableBody = document.getElementById("customers-table-body");
       if (!tableBody) return;
       tableBody.innerHTML = "";
-      await fetchWithAuth("/api/equipments").then((data) => {
-        const rows = data.data.map((equipment) => {
-          const hospital = equipment.Hospital || {};
-          const department = equipment.Department || {};
-          let lastServiceDate = "";
-          if (equipment.Services && equipment.Services.length > 0) {
-            lastServiceDate = equipment.Services.map((s) => s.Date)
-              .sort()
-              .reverse()[0]
-              .split("T")[0];
-          }
-          let nextServiceDate = "";
-          if (lastServiceDate) {
-            const next = new Date(lastServiceDate);
-            next.setMonth(next.getMonth() + Number(equipment.ServicingPeriod));
-            nextServiceDate = next.toISOString().split("T")[0];
-          } else {
-            nextServiceDate = "N/A";
-          }
-          const today = new Date();
-          let daysDiff = NaN;
-          if (nextServiceDate !== "N/A") {
-            const nextServiceDateObj = new Date(nextServiceDate);
-            const timeDiff = nextServiceDateObj - today;
-            daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-          }
-          const marker =
-            daysDiff <= 0 || nextServiceDate == "N/A"
-              ? "❌"
-              : daysDiff <= 30
-              ? "🟠"
-              : "✅";
-          const rowHtml = `
-                        <td>${hospital.Name || ""}</td>
-                        <td>${marker || "❌"} </td>
-                        <td>${equipment.Name || ""}</td>
-                        <td>${
-                          equipment.Department ? equipment.Department.name : ""
-                        }</td>
-                        <td>${hospital.Phone || ""}</td>
-                        <td>${lastServiceDate || "N/A"}</td>
-                        <td>${equipment.ServicingPeriod || "N/A"}</td>
-                        <td>${nextServiceDate}</td>
-                    `;
-          let sortDate =
-            nextServiceDate === "N/A" ? "0000-01-01" : nextServiceDate;
-          return { sortDate, rowHtml };
-        });
-        rows.sort((a, b) => a.sortDate.localeCompare(b.sortDate));
-        rows.forEach(({ rowHtml }, idx) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `<td>${idx + 1}</td>` + rowHtml;
-          tableBody.appendChild(row);
-        });
+      const equipments = await getAllEquipments();
+      const rows = equipments.map((equipment) => {
+        const hospital = equipment.Hospital || {};
+        const department = equipment.Department || {};
+        let lastServiceDate = "";
+        if (equipment.Services && equipment.Services.length > 0) {
+          lastServiceDate = equipment.Services.map((s) => s.Date)
+            .sort()
+            .reverse()[0]
+            .split("T")[0];
+        }
+        let nextServiceDate = "";
+        if (lastServiceDate) {
+          const next = new Date(lastServiceDate);
+          next.setMonth(next.getMonth() + Number(equipment.ServicingPeriod));
+          nextServiceDate = next.toISOString().split("T")[0];
+        } else {
+          nextServiceDate = "N/A";
+        }
+        const today = new Date();
+        let daysDiff = NaN;
+        if (nextServiceDate !== "N/A") {
+          const nextServiceDateObj = new Date(nextServiceDate);
+          const timeDiff = nextServiceDateObj - today;
+          daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+        }
+        const marker =
+          daysDiff <= 0 || nextServiceDate == "N/A"
+            ? "❌"
+            : daysDiff <= 30
+            ? "🟠"
+            : "✅";
+        const rowHtml = `
+                      <td>${hospital.Name || ""}</td>
+                      <td>${marker || "❌"} </td>
+                      <td>${equipment.Name || ""}</td>
+                      <td>${
+                        equipment.Department ? equipment.Department.name : ""
+                      }</td>
+                      <td>${hospital.Phone || ""}</td>
+                      <td>${lastServiceDate || "N/A"}</td>
+                      <td>${equipment.ServicingPeriod || "N/A"}</td>
+                      <td>${nextServiceDate}</td>
+                  `;
+        let sortDate =
+          nextServiceDate === "N/A" ? "0000-01-01" : nextServiceDate;
+        return { sortDate, rowHtml };
+      });
+      rows.sort((a, b) => a.sortDate.localeCompare(b.sortDate));
+      rows.forEach(({ rowHtml }, idx) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${idx + 1}</td>` + rowHtml;
+        tableBody.appendChild(row);
       });
     }
 
@@ -988,42 +1014,41 @@
       const tableBody = document.getElementById("equipments-table-body");
       if (!tableBody) return;
       tableBody.innerHTML = "";
-      await fetchWithAuth("/api/equipments").then((data) => {
-        allEquipments = data.data; // <-- Set global for form select options
-        data.data.forEach((equipment, idx) => {
-          const newRow = document.createElement("tr");
-          newRow.innerHTML = `
-                    <td>${idx + 1}</td>
-                    <td>${equipment.Name}</td>
-                    <td>${equipment.Model}</td>
-                    <td>${equipment.ServicingPeriod}</td>
-                    <td>${equipment.Hospital.Name}</td>
-                    <td>${
-                      equipment.Department ? equipment.Department.name : ""
-                    }</td>
-                `;
-          newRow.setAttribute(
-            "data-href",
-            `/api/equipments/details/${equipment.id}`
-          );
-          newRow.addEventListener("click", function (event) {
-            event.preventDefault();
-            const url = this.dataset.href;
-            fetch(url, {
-              headers: {
-                Authorization: "Bearer " + localStorage.getItem("jwt_token"),
-              },
+      const equipments = await getAllEquipments();
+      allEquipments = equipments; // <-- Set global for form select options
+      equipments.forEach((equipment, idx) => {
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `
+                  <td>${idx + 1}</td>
+                  <td>${equipment.Name}</td>
+                  <td>${equipment.Model}</td>
+                  <td>${equipment.ServicingPeriod}</td>
+                  <td>${equipment.Hospital.Name}</td>
+                  <td>${
+                    equipment.Department ? equipment.Department.name : ""
+                  }</td>
+              `;
+        newRow.setAttribute(
+          "data-href",
+          `/api/equipments/details/${equipment.id}`
+        );
+        newRow.addEventListener("click", function (event) {
+          event.preventDefault();
+          const url = this.dataset.href;
+          fetch(url, {
+            headers: {
+              Authorization: "Bearer " + localStorage.getItem("jwt_token"),
+            },
+          })
+            .then((response) => response.text())
+            .then((html) => {
+              document.open();
+              document.write(html);
+              document.close();
             })
-              .then((response) => response.text())
-              .then((html) => {
-                document.open();
-                document.write(html);
-                document.close();
-              })
-              .catch((error) => console.error("Error:", error));
-          });
-          tableBody.appendChild(newRow);
+            .catch((error) => console.error("Error:", error));
         });
+        tableBody.appendChild(newRow);
       });
     }
 
@@ -1188,7 +1213,7 @@
 
     // --- Section: Hook up auto-refresh on add/update/delete/section shift ---
     function autoRefreshAllTables() {
-      refreshHomeTable();
+      refreshHistoryTable();
       refreshHospitalsTable();
       refreshEngineersTable();
       refreshEquipmentsTable();
@@ -1228,10 +1253,10 @@
     // --- Show/hide Record Service Session button based on section ---
     function updateRecordServiceSessionBtnVisibility() {
       const btn = document.getElementById("record-service-session-btn");
-      const homeSection = document.getElementById("home-section");
-      if (!btn || !homeSection) return;
-      // Check if homeSection is actually visible in the DOM
-      const isVisible = homeSection.offsetParent !== null;
+      const HistorySection = document.getElementById("History-section");
+      if (!btn || !HistorySection) return;
+      // Check if HistorySection is actually visible in the DOM
+      const isVisible = HistorySection.offsetParent !== null;
       btn.style.display = isVisible ? "" : "none";
     }
 
@@ -1413,6 +1438,8 @@
             department_id,
           }),
         });
+        invalidateEquipmentsCache(); // Invalidate cache after adding new equipment
+        // Refresh tables and selects
         await refreshEquipmentsTable();
         populateEquipmentSelect();
         addEquipmentForm.style.display = "none";
@@ -1519,7 +1546,6 @@
       await fetchWithAuth("/api/departments", {
         method: "POST",
         body: JSON.stringify({ name }),
-        headers: { "Content-Type": "application/json" },
       })
         .then((data) => {
           if (data && data.error) {

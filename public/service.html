@@ -12,7 +12,7 @@
       <h1 class="title">MQS Inc.</h1>
 
       <nav class="menu-bar">
-        <a href="/index.html" class="menu-link">Home</a>
+        <a href="/index.html" class="menu-link">History</a>
         <a href="/index.html" class="menu-link">Hospitals</a>
         <a href="/index.html" class="menu-link">Equipment</a>
         <a href="/index.html" class="menu-link">Services</a>
@@ -52,7 +52,9 @@
         <button onclick="toggleFormVisibility('update-service-form')">
           Edit
         </button>
-        <button onclick="deleteService()">Delete</button>
+        <button onclick="confirmDelete(() => deleteService('{{.id}}'))">
+          Delete
+        </button>
       </span>
 
       <form
@@ -186,20 +188,20 @@
           .then((body) => {
             showSuccessMessage();
           })
-              .then(() => {
-                fetch(`/api/services/details/{{.id}}`, {
-                  headers: {
-                    Authorization: "Bearer " + localStorage.getItem("jwt_token"),
-                  },
-                })
-                .then((response) => response.text())
-                .then((html) => {
-                  document.open();
-                  document.write(html);
-                  document.close();
-                })
-                .catch((error) => console.error("Error:", error));
+          .then(() => {
+            fetch(`/api/services/details/{{.id}}`, {
+              headers: {
+                Authorization: "Bearer " + localStorage.getItem("jwt_token"),
+              },
+            })
+              .then((response) => response.text())
+              .then((html) => {
+                document.open();
+                document.write(html);
+                document.close();
               })
+              .catch((error) => console.error("Error:", error));
+          })
           .catch((error) => {
             console.error(`Error updating service: ${error}`);
             showFailedMessage();
@@ -209,8 +211,8 @@
       }
 
       // Delete Service logic
-      function deleteService() {
-        fetchWithAuth(`/api/services/delete/{{.id}}`, {
+      function deleteService(id) {
+        fetchWithAuth(`/api/services/delete/${id}`, {
           method: "DELETE",
         })
           .then((data) => {
