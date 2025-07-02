@@ -1,0 +1,101 @@
+<!-- department_summary.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Department Due Equipments</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/script.js"></script>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Department Due Equipments</h1>
+    </div>
+    <div class="content">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Equipment Name</th>
+            <th>Model</th>
+            <th>Last Service Date</th>
+            <th>Next Due Date</th>
+          </tr>
+        </thead>
+        <tbody id="dept-equipments-table-body"></tbody>
+      </table>
+
+      <span id="service-due-back-button">
+        <button class="back-button" onclick="document.location='../../../index.html'">Back</button>
+      </span>
+      <style>
+        #service-due-back-button {
+          margin-left: 20px;
+        }
+      </style>
+    </div>
+    <script>
+      function getQueryParam(name) {
+        const url = new URL(window.location.href);
+        return url.searchParams.get(name);
+      }
+      async function loadDeptDueEquipments() {
+        const hospitalId = getQueryParam("hospital");
+        const departmentId = getQueryParam("department");
+        const data = await fetchWithAuth("/api/equipments");
+        const allEquipments = data.data || [];
+        const today = new Date();
+        const dueEquipments = [];
+        allEquipments.forEach((eq) => {
+          if (
+            (eq.Hospital?.id || eq.HospitalID) === hospitalId &&
+            (eq.Department?.id || eq.DepartmentID) === departmentId
+          ) {
+            let lastServiceDate = null;
+            if (eq.Services && eq.Services.length > 0) {
+              lastServiceDate = eq.Services.map((s) => s.Date)
+                .sort()
+                .reverse()[0];
+            }
+            let nextDueDate = null;
+            if (lastServiceDate && eq.ServicingPeriod) {
+              const next = new Date(lastServiceDate);
+              next.setMonth(next.getMonth() + Number(eq.ServicingPeriod));
+              nextDueDate = next;
+            } else if (!lastServiceDate) {
+              // No service yet: treat as due now
+              nextDueDate = new Date();
+            }
+            // Include if due (nextDueDate <= today)
+            // if (nextDueDate && nextDueDate <= today) {
+            // Include all equipment in that department
+            if (nextDueDate) {
+              dueEquipments.push({
+                name: eq.Name,
+                model: eq.Model,
+                lastServiceDate: lastServiceDate
+                  ? lastServiceDate.split("T")[0]
+                  : "N/A",
+                nextDueDate: nextDueDate.toISOString().split("T")[0],
+              });
+            }
+          }
+        });
+        const tbody = document.getElementById("dept-equipments-table-body");
+        tbody.innerHTML = "";
+        dueEquipments.forEach((eq, idx) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+        <td>${idx + 1}</td>
+        <td>${eq.name}</td>
+        <td>${eq.model}</td>
+        <td>${eq.lastServiceDate}</td>
+        <td>${eq.nextDueDate}</td>
+      `;
+          tbody.appendChild(tr);
+        });
+      }
+      document.addEventListener("DOMContentLoaded", loadDeptDueEquipments);
+    </script>
+  </body>
+</html>

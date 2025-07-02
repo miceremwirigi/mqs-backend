@@ -10,30 +10,31 @@
   <body>
     <script src="/script.js"></script>
     <div class="header">
-      <h1 class="title">MQS Inc.</h1>
-
       <nav class="menu-bar">
-        <a href="#" class="menu-link" data-section="home-section">Home</a>
-        <a href="#" class="menu-link" data-section="hospitals-section"
-          >Hospitals</a
-        >
-        <a href="#" class="menu-link" data-section="equipments-section"
-          >Equipment</a
-        >
-        <a href="#" class="menu-link" data-section="services-section"
-          >Services</a
-        >
-        <a href="#" class="menu-link" data-section="engineers-section"
-          >Engineers</a
-        >
-        <a
-          href="#"
-          class="menu-link"
-          style="float: right"
-          onclick="handleLogout()"
-          >Logout</a
-        >
+        <div class="dropdown">
+          <button class="dropbtn" aria-label="Menu">
+        <span class="menu-icon">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </span>
+          </button>
+          <div class="dropdown-content">
+            <span class="dropdown-close" id="dropdown-close-btn" title="Close Menu">&times;</span>
+            <a href="#" class="menu-link" data-section="service-summary-section">Services Due</a>
+            <a href="#" class="menu-link" data-section="home-section">Home</a>
+            <a href="#" class="menu-link" data-section="hospitals-section">Hospitals</a>
+            <a href="#" class="menu-link" data-section="equipments-section">Equipment</a>
+            <a href="#" class="menu-link" data-section="services-section">Services</a>
+            <a href="#" class="menu-link" data-section="engineers-section">Engineers</a>
+            <a href="#" class="menu-link logout-link" onclick="handleLogout()">Logout</a>
+          </div>
+        </div>
       </nav>
+      <style>
+      
+      </style>
+      <h1 class="title">MQS Inc.</h1>
     </div>
     <div class="content">
       <div id="success-popup">Success</div>
@@ -809,6 +810,26 @@
         Record Service Session
       </button>
 
+      <div
+        id="service-summary-section"
+        class="main-section"
+        style="display: none"
+      >
+        <h2>Service Due Summary</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Hospital</th>
+              <th>Department</th>
+              <th>Most Recent Due Date</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="service-summary-table-body"></tbody>
+        </table>
+      </div>
+
       <p>Refer to the documentation?</p>
       <p>Version: 1.0.0</p>
     </div>
@@ -1053,6 +1074,118 @@
       });
     }
 
+    async function refreshServiceSummaryTable() {
+      const tableBody = document.getElementById("service-summary-table-body");
+      if (!tableBody) return;
+      tableBody.innerHTML = "";
+
+      // Fetch all equipments
+      const data = await fetchWithAuth("/api/equipments");
+      const allEquipments = data.data || [];
+      const today = new Date();
+
+      // Group due equipments by hospital+department
+      const deptMap = {};
+      allEquipments.forEach((eq) => {
+        // Find last service date
+        let lastServiceDate = null;
+        if (eq.Services && eq.Services.length > 0) {
+          lastServiceDate = eq.Services.map((s) => s.Date)
+            .sort()
+            .reverse()[0];
+        }
+        // Calculate next due date
+        let nextDueDate = null;
+        if (lastServiceDate && eq.ServicingPeriod) {
+          const next = new Date(lastServiceDate);
+          next.setMonth(next.getMonth() + Number(eq.ServicingPeriod));
+          nextDueDate = next;
+        } else if (!lastServiceDate) {
+          // No service yet: treat as due now
+          nextDueDate = new Date();
+        }
+        if (!nextDueDate) return; // skip if can't calculate
+
+        // If due (nextDueDate <= today)
+        if (nextDueDate <= today) {
+          const hospitalId = eq.Hospital?.id || eq.HospitalID;
+          const departmentId = eq.Department?.id || eq.DepartmentID;
+          const key = `${hospitalId}_${departmentId}`;
+          if (!deptMap[key]) {
+            deptMap[key] = {
+              hospital_id: hospitalId,
+              hospital_name: eq.Hospital?.Name || "",
+              department_id: departmentId,
+              department_name: eq.Department?.name || "",
+              most_recent_due_date: nextDueDate,
+              due_equipments: [],
+            };
+          }
+          // Update most recent due date if this one is later
+          if (nextDueDate > deptMap[key].most_recent_due_date) {
+            deptMap[key].most_recent_due_date = nextDueDate;
+          }
+          deptMap[key].due_equipments.push({
+            id: eq.id,
+            name: eq.Name,
+            model: eq.Model,
+            next_due_date: nextDueDate,
+            last_service_date: lastServiceDate,
+          });
+        }
+      });
+
+      // Convert to array and sort
+      const summaryRows = Object.values(deptMap).sort(
+        (a, b) => a.most_recent_due_date - b.most_recent_due_date
+      );
+
+      summaryRows.forEach((item, idx) => {
+        const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td>${item.hospital_name}</td>
+          <td>${item.department_name}</td>
+          <td>${item.most_recent_due_date.toISOString().split("T")[0]}</td>
+          <td>
+        <a href="/department_summary.html?hospital=${
+          item.hospital_id
+        }&department=${item.department_id}">
+          <span class="icon">
+            ${
+              (() => {
+          // Calculate marker for the most recent due date
+          const today = new Date();
+          let daysDiff = NaN;
+          const nextServiceDate = item.most_recent_due_date
+            ? item.most_recent_due_date.toISOString().split("T")[0]
+            : "N/A";
+          if (nextServiceDate !== "N/A") {
+            const nextServiceDateObj = new Date(nextServiceDate);
+            const timeDiff = nextServiceDateObj - today;
+            daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+          }
+          if (daysDiff <= 0 || nextServiceDate == "N/A") {
+            return "❌";
+          } else if (daysDiff <= 30) {
+            return "🟠";
+          } else {
+            return "✅";
+          }
+              })()
+            }
+          </span>
+        </a>
+          </td>
+        `;
+        tr.addEventListener("click", function () {
+          window.location.href = `/department_summary.html?hospital=${item.hospital_id}&department=${item.department_id}`;
+        });
+        tableBody.appendChild(tr);
+      });
+    }
+
     // --- Section: Hook up auto-refresh on add/update/delete/section shift ---
     function autoRefreshAllTables() {
       refreshHomeTable();
@@ -1060,15 +1193,16 @@
       refreshEngineersTable();
       refreshEquipmentsTable();
       refreshServicesTable();
+      refreshServiceSummaryTable();
     }
 
     // Section navigation: refresh content on section shift
     function patchSectionNavigation() {
-      const menuLinks = document.querySelectorAll(".menu-link");
+      var menuLinks = document.querySelectorAll(".menu-link");
       menuLinks.forEach((link) => {
         link.addEventListener("click", function (e) {
           setTimeout(() => {
-            autoRefreshAllTables();
+            // autoRefreshAllTables();
             updateRecordServiceSessionBtnVisibility();
           }, 200);
         });
@@ -1388,12 +1522,11 @@
         headers: { "Content-Type": "application/json" },
       })
         .then((data) => {
-          if (data && data.error){
+          if (data && data.error) {
             throw new Error(data.error);
             showSuccessMessage();
-
-            };     
-          })
+          }
+        })
         .catch((err) => {
           if (err.message.includes("unique")) {
             alert("Department already exists.");
@@ -1462,20 +1595,19 @@
           body: JSON.stringify({ name }),
           headers: { "Content-Type": "application/json" },
         })
-        .then((data) => {
-          if (data && data.error){
-            throw new Error(data.error);
-            showSuccessMessage();
-
-            };     
+          .then((data) => {
+            if (data && data.error) {
+              throw new Error(data.error);
+              showSuccessMessage();
+            }
           })
-        .catch((err) => {
-          if (err.message.includes("unique")) {
-            alert("Department already exists.");
-          } else {
-            alert("Failed to add department: " + err.message);
-          }
-        });
+          .catch((err) => {
+            if (err.message.includes("unique")) {
+              alert("Department already exists.");
+            } else {
+              alert("Failed to add department: " + err.message);
+            }
+          });
         await populateDepartmentSelect();
         addDeptForm.style.display = "none";
         nameInput.value = "";
@@ -1492,6 +1624,9 @@
         if (target) {
           target.style.display = "block";
           localStorage.setItem("activeSection", id);
+          if (id === "service-summary-section") {
+            refreshServiceSummaryTable();
+          }
         }
       }
       menuLinks.forEach((link) => {
@@ -1503,9 +1638,6 @@
       // Show the first section by default
       const activeSection = localStorage.getItem("activeSection");
       if (activeSection && document.getElementById(activeSection)) {
-        sections.forEach((sec) => (sec.style.display = "none"));
-        document.getElementById(activeSection).style.display = "block";
-      } else {
         if (sections[0]) {
           sections[0].style.display = "block";
         }
