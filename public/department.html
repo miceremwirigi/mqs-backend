@@ -11,12 +11,45 @@
     <div class="header">
       <h1 class="title">MQS Inc.</h1>
       <h2 class="subtitle">Medical Equipment Service Scheduling</h2>
-      <nav>
-        <a href="index.html">History</a>
-        <a href="department.html">Departments</a>
-        <a href="equipment.html">Equipment</a>
-        <a href="hospitals.html">Hospitals</a>
-        <a href="services.html">Services</a>
+      <nav class="menu-bar">
+        <div class="dropdown">
+          <button class="dropbtn" aria-label="Menu">
+            <span class="menu-icon">
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+            </span>
+          </button>
+          <div class="dropdown-content">
+            <span
+              class="dropdown-close"
+              id="dropdown-close-btn"
+              title="Close Menu"
+              >&times;</span
+            >
+            <a href="/index.html" class="menu-link" data-section="service-summary-section"
+              >Services Due</a
+            >
+            <a href="/index.html" class="menu-link" data-section="history-section"
+              >History</a
+            >
+            <a href="/index.html" class="menu-link" data-section="hospitals-section"
+              >Hospitals</a
+            >
+            <a href="/index.html" class="menu-link" data-section="equipments-section"
+              >Equipment</a
+            >
+            <a href="/index.html" class="menu-link" data-section="services-section"
+              >Services</a
+            >
+            <a href="/index.html" class="menu-link" data-section="engineers-section"
+              >Engineers</a
+            >
+            <a href="#" class="menu-link logout-link" onclick="handleLogout()"
+              >Logout</a
+            >
+          </div>
+        </div>
       </nav>
     </div>
     <div class="content">
@@ -122,6 +155,12 @@
             method: "DELETE",
           })
             .then((data) => {
+<<<<<<< HEAD
+=======
+              if (data && data.error) {
+                throw new Error(data.error);
+              }
+>>>>>>> 48a7f14 (repair broken rebase restructure summary)
               showSuccessMessage();
               window.location.href = "/index.html";
             })

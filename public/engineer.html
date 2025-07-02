@@ -9,16 +9,47 @@
   </head>
   <body>
     <div class="header">
-      <h1 class="title">MQS Inc.</h1>
-
       <nav class="menu-bar">
-        <a href="/index.html" class="menu-link">History</a>
-        <a href="/index.html" class="menu-link">Hospitals</a>
-        <a href="/index.html" class="menu-link">Equipment</a>
-        <a href="/index.html" class="menu-link">Services</a>
-        <a href="/index.html" class="menu-link">Engineers</a>
-        <a href="#" class="menu-link" onclick="handleLogout()">Logout</a>
+        <div class="dropdown">
+          <button class="dropbtn" aria-label="Menu">
+            <span class="menu-icon">
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+            </span>
+          </button>
+          <div class="dropdown-content">
+            <span
+              class="dropdown-close"
+              id="dropdown-close-btn"
+              title="Close Menu"
+              >&times;</span
+            >
+            <a href="/index.html" class="menu-link" data-section="service-summary-section"
+              >Services Due</a
+            >
+            <a href="/index.html" class="menu-link" data-section="history-section"
+              >History</a
+            >
+            <a href="/index.html" class="menu-link" data-section="hospitals-section"
+              >Hospitals</a
+            >
+            <a href="/index.html" class="menu-link" data-section="equipments-section"
+              >Equipment</a
+            >
+            <a href="/index.html" class="menu-link" data-section="services-section"
+              >Services</a
+            >
+            <a href="/index.html" class="menu-link" data-section="engineers-section"
+              >Engineers</a
+            >
+            <a href="#" class="menu-link logout-link" onclick="handleLogout()"
+              >Logout</a
+            >
+          </div>
+        </div>
       </nav>
+      <h1 class="title">MQS Inc.</h1>
     </div>
     <div class="content">
       <div id="success-popup">Success</div>
@@ -80,6 +111,9 @@
               method: "DELETE",
             })
               .then((data) => {
+                if (data && data.error) {
+                  throw new Error(data.error);
+                }
                 showSuccessMessage();
                 window.location.href = "/index.html";
               })

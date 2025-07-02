@@ -85,6 +85,8 @@ async function populateDepartmentSelect() {
 
 document.addEventListener("DOMContentLoaded", function () {
   const dropdown = document.querySelector('.menu-bar .dropdown');
+  if (!dropdown) return; // Only run dropdown logic if dropdown exists
+
   const dropbtn = dropdown.querySelector('.dropbtn');
   const dropdownContent = dropdown.querySelector('.dropdown-content');
   const closeBtn = document.getElementById('dropdown-close-btn');
@@ -112,6 +114,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 });
+
+function invalidateEquipmentsCache() {
+  if (typeof equipmentsCache !== "undefined") {
+    equipmentsCache = null;
+    equipmentsCacheTime = 0;
+    if (typeof equipmentsCachePromise !== "undefined") {
+      equipmentsCachePromise = null;
+    }
+  }
+}
 
 
 
