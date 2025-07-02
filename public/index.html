@@ -13,27 +13,43 @@
       <nav class="menu-bar">
         <div class="dropdown">
           <button class="dropbtn" aria-label="Menu">
-        <span class="menu-icon">
-          <span class="bar"></span>
-          <span class="bar"></span>
-          <span class="bar"></span>
-        </span>
+            <span class="menu-icon">
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+            </span>
           </button>
           <div class="dropdown-content">
-            <span class="dropdown-close" id="dropdown-close-btn" title="Close Menu">&times;</span>
-            <a href="#" class="menu-link" data-section="service-summary-section">Services Due</a>
-            <a href="#" class="menu-link" data-section="home-section">Home</a>
-            <a href="#" class="menu-link" data-section="hospitals-section">Hospitals</a>
-            <a href="#" class="menu-link" data-section="equipments-section">Equipment</a>
-            <a href="#" class="menu-link" data-section="services-section">Services</a>
-            <a href="#" class="menu-link" data-section="engineers-section">Engineers</a>
-            <a href="#" class="menu-link logout-link" onclick="handleLogout()">Logout</a>
+            <span
+              class="dropdown-close"
+              id="dropdown-close-btn"
+              title="Close Menu"
+              >&times;</span
+            >
+            <a href="#" class="menu-link" data-section="service-summary-section"
+              >Services Due</a
+            >
+            <a href="#" class="menu-link" data-section="History-section"
+              >History</a
+            >
+            <a href="#" class="menu-link" data-section="hospitals-section"
+              >Hospitals</a
+            >
+            <a href="#" class="menu-link" data-section="equipments-section"
+              >Equipment</a
+            >
+            <a href="#" class="menu-link" data-section="services-section"
+              >Services</a
+            >
+            <a href="#" class="menu-link" data-section="engineers-section"
+              >Engineers</a
+            >
+            <a href="#" class="menu-link logout-link" onclick="handleLogout()"
+              >Logout</a
+            >
           </div>
         </div>
       </nav>
-      <style>
-      
-      </style>
       <h1 class="title">MQS Inc.</h1>
     </div>
     <div class="content">
@@ -44,7 +60,7 @@
       </div>
       <!---------------------------- History Section ------------------------->
       <div id="History-section" class="main-section">
-        <h2 class="sub-title">Historye</h2>
+        <h2 class="sub-title">History</h2>
         <table>
           <thead>
             <tr>
@@ -189,6 +205,8 @@
             })
               .then((body) => {
                 showSuccessMessage();
+                invalidateEquipmentsCache && invalidateEquipmentsCache();
+                window.location.reload();
               })
               .catch((error) => {
                 console.error(`"error adding hospital: ${error}`);
@@ -259,6 +277,8 @@
             })
               .then((body) => {
                 showSuccessMessage();
+                invalidateEquipmentsCache && invalidateEquipmentsCache();
+                window.location.reload();
               })
               .catch((error) => {
                 console.error(`"error adding engineer: ${error}`);
@@ -453,6 +473,16 @@
             };
           });
 
+          function invalidateEquipmentsCache() {
+            if (typeof equipmentsCache !== "undefined") {
+              equipmentsCache = null;
+              equipmentsCacheTime = 0;
+              if (typeof equipmentsCachePromise !== "undefined") {
+                equipmentsCachePromise = null;
+              }
+            }
+          }
+
           async function handleAddEquipmentsButton() {
             const equipmentsForm =
               document.getElementById("add-equipment-form");
@@ -468,6 +498,8 @@
             })
               .then((body) => {
                 showSuccessMessage();
+                invalidateEquipmentsCache && invalidateEquipmentsCache();
+                window.location.reload();
               })
               .catch((error) => {
                 console.error(`"error adding equipment: ${error}`);
@@ -513,7 +545,7 @@
 
       <!------------------ Services Section ------------------>
       <div id="services-section" class="main-section">
-        <h2 class="sub-title">Services History</h2>
+        <h2 class="sub-title">Done</h2>
         <table>
           <thead>
             <tr>
@@ -817,7 +849,7 @@
         class="main-section"
         style="display: none"
       >
-        <h2>Service Due Summary</h2>
+        <h2>Pending</h2>
         <table>
           <thead>
             <tr>
@@ -1178,28 +1210,26 @@
           item.hospital_id
         }&department=${item.department_id}">
           <span class="icon">
-            ${
-              (() => {
-          // Calculate marker for the most recent due date
-          const today = new Date();
-          let daysDiff = NaN;
-          const nextServiceDate = item.most_recent_due_date
-            ? item.most_recent_due_date.toISOString().split("T")[0]
-            : "N/A";
-          if (nextServiceDate !== "N/A") {
-            const nextServiceDateObj = new Date(nextServiceDate);
-            const timeDiff = nextServiceDateObj - today;
-            daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-          }
-          if (daysDiff <= 0 || nextServiceDate == "N/A") {
-            return "❌";
-          } else if (daysDiff <= 30) {
-            return "🟠";
-          } else {
-            return "✅";
-          }
-              })()
-            }
+            ${(() => {
+              // Calculate marker for the most recent due date
+              const today = new Date();
+              let daysDiff = NaN;
+              const nextServiceDate = item.most_recent_due_date
+                ? item.most_recent_due_date.toISOString().split("T")[0]
+                : "N/A";
+              if (nextServiceDate !== "N/A") {
+                const nextServiceDateObj = new Date(nextServiceDate);
+                const timeDiff = nextServiceDateObj - today;
+                daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+              }
+              if (daysDiff <= 0 || nextServiceDate == "N/A") {
+                return "❌";
+              } else if (daysDiff <= 30) {
+                return "🟠";
+              } else {
+                return "✅";
+              }
+            })()}
           </span>
         </a>
           </td>
@@ -1661,12 +1691,12 @@
           showSection(this.dataset.section);
         });
       });
-      // Show the first section by default
+      // Show the Service Due Summary section by default
       const activeSection = localStorage.getItem("activeSection");
       if (activeSection && document.getElementById(activeSection)) {
-        if (sections[0]) {
-          sections[0].style.display = "block";
-        }
+        showSection(activeSection);
+      } else {
+        showSection("service-summary-section");
       }
     });
   </script>
