@@ -1136,9 +1136,8 @@
       if (!tableBody) return;
       tableBody.innerHTML = "";
 
-      // Fetch all equipments
-      const data = await fetchWithAuth("/api/equipments");
-      const allEquipments = data.data || [];
+      // Fetch all equipments using the cache
+      const allEquipments = await getAllEquipments();
       const today = new Date();
 
       // Group due equipments by hospital+department
@@ -1248,7 +1247,8 @@
       refreshEngineersTable();
       refreshEquipmentsTable();
       refreshServicesTable();
-      refreshServiceSummaryTable();
+      // REMOVE or comment out the next line:
+      // refreshServiceSummaryTable();
     }
 
     // Section navigation: refresh content on section shift
