@@ -5,4 +5,5 @@ type Hospital struct {
 	Name     string
 	Location string
 	Phone    string
+	Email	string
 }
