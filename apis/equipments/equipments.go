@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
@@ -270,4 +271,29 @@ func (h *Handler) DeleteEquipment(c fiber.Ctx) error {
 	}
 
 	return apis.GeneralApiResponse(c, apis.StatusOkResponseCode, "successfully deleted equipment", nil)
+}
+
+func (h *Handler) SetEquipmentDone(c fiber.Ctx) error {
+	id := c.Query("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "missing id"})
+	}
+	return h.DB.Model(&models.Equipment{}).Where("id = ?", id).Update("is_done", true).Error
+}
+
+func (h *Handler) SetEquipmentDoNotRemind(c fiber.Ctx) error {
+	id := c.Query("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "missing id"})
+	}
+	return h.DB.Model(&models.Equipment{}).Where("id = ?", id).Update("snooze_email", true).Error
+}
+
+func (h *Handler) SnoozeEquipmentReminder(c fiber.Ctx) error {
+	id := c.Query("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "missing id"})
+	}
+	now := time.Now()
+	return h.DB.Model(&models.Equipment{}).Where("id = ?", id).Update("last_reminder_date", now).Error
 }

@@ -25,22 +25,40 @@
               title="Close Menu"
               >&times;</span
             >
-            <a href="/index.html" class="menu-link" data-section="service-summary-section"
+            <a
+              href="/index.html"
+              class="menu-link"
+              data-section="service-summary-section"
               >Services Due</a
             >
-            <a href="/index.html" class="menu-link" data-section="history-section"
+            <a
+              href="/index.html"
+              class="menu-link"
+              data-section="history-section"
               >History</a
             >
-            <a href="/index.html" class="menu-link" data-section="hospitals-section"
+            <a
+              href="/index.html"
+              class="menu-link"
+              data-section="hospitals-section"
               >Hospitals</a
             >
-            <a href="/index.html" class="menu-link" data-section="equipments-section"
+            <a
+              href="/index.html"
+              class="menu-link"
+              data-section="equipments-section"
               >Equipment</a
             >
-            <a href="/index.html" class="menu-link" data-section="services-section"
+            <a
+              href="/index.html"
+              class="menu-link"
+              data-section="services-section"
               >Services</a
             >
-            <a href="/index.html" class="menu-link" data-section="engineers-section"
+            <a
+              href="/index.html"
+              class="menu-link"
+              data-section="engineers-section"
               >Engineers</a
             >
             <a href="#" class="menu-link logout-link" onclick="handleLogout()"
@@ -60,13 +78,19 @@
             <th>Model</th>
             <th>Last Service Date</th>
             <th>Next Due Date</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody id="dept-equipments-table-body"></tbody>
       </table>
 
       <span id="service-due-back-button">
-        <button class="back-button" onclick="document.location='../../../index.html'">Back</button>
+        <button
+          class="back-button"
+          onclick="document.location='../../../index.html'"
+        >
+          Back
+        </button>
       </span>
       <style>
         #service-due-back-button {
@@ -111,6 +135,7 @@
             // Include all equipment in that department
             if (nextDueDate) {
               dueEquipments.push({
+                id: eq.id, // Capture the ID for email sending
                 name: eq.Name,
                 model: eq.Model,
                 lastServiceDate: lastServiceDate
@@ -131,9 +156,21 @@
         <td>${eq.model}</td>
         <td>${eq.lastServiceDate}</td>
         <td>${eq.nextDueDate}</td>
+        <td>
+          <button onclick="sendReminderEmail('${eq.id}')">Send Email</button>
+        </td>
       `;
           tbody.appendChild(tr);
         });
+      }
+      async function sendReminderEmail(equipmentId) {
+        await fetch(`/api/equipments/send-reminder?id=${equipmentId}`, {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("jwt_token"),
+          },
+        });
+        alert("Reminder email sent!");
       }
       document.addEventListener("DOMContentLoaded", loadDeptDueEquipments);
     </script>
