@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"os/exec"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/template/html/v2"
@@ -26,7 +25,6 @@ func main() {
 	// if err := cmd.Run(); err != nil {
 	// 	panic("Failed to run migrations: " + err.Error())
 	// }
-
 
 	// Connect to the database
 	db := databases.StartDatabase()
