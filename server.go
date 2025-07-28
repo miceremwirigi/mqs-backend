@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/template/html/v2"
 	"github.com/miceremwirigi/mqs-backend/apis"
 	"github.com/miceremwirigi/mqs-backend/databases"
+	"github.com/miceremwirigi/mqs-backend/utils"
 )
 
 func main() {
@@ -22,6 +23,7 @@ func main() {
 
 	db := databases.StartDatabase()
 	apis.RegisterRoutes(app, db)
+	utils.RunCronJobs(db)
 
 	app.Listen(":3000")
 }

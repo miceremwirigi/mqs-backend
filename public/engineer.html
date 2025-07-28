@@ -66,6 +66,10 @@
         <span class="detail-label">Contact:</span>
         <span class="detail-value">{{.contact}}</span>
       </div>
+      <div class="detail-info">
+        <span class="detail-label">Email:</span>
+        <span class="detail-value">{{.email}}</span>
+      </div>
 
       <span>
         <button onclick="document.location='../../../index.html'">Back</button>
@@ -98,6 +102,15 @@
           id="engineer-contact"
           name="contact"
           value="{{.contact}}"
+          required
+        />
+        <br />
+        <label for="engineer-email">Email</label>
+        <input
+          type="text"
+          id="engineer-email"
+          name="email"
+          value="{{.email}}"
           required
         />
         <br />
@@ -184,12 +197,12 @@
             .addEventListener("submit", handleUpdateFormSubmit);
         </script>
 
-        <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
         <p>For more information, please refer to the documentation.</p>
         <p>Version: 1.0.0</p>
       </div>
 
       <div class="footer">
+        <h2 class="subtitle">Medical Equipment Service Sheduling</h2>
         <p>&copy; 2025 MQS. All rights reserved.</p>
       </div>
     </div>
