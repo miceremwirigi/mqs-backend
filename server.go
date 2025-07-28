@@ -22,11 +22,11 @@ func main() {
 
 	os.Setenv("env", "production")
 
-	//Run migrations
-	cmd := exec.Command("sh", "-c", "go run migrations/up/up.go")
-	if err := cmd.Run(); err != nil {
-		panic("Failed to run migrations: " + err.Error())
-	}
+	// cmd := exec.Command("sh", "-c", "go run migrations/up/up.go")
+	// if err := cmd.Run(); err != nil {
+	// 	panic("Failed to run migrations: " + err.Error())
+	// }
+
 
 	// Connect to the database
 	db := databases.StartDatabase()
