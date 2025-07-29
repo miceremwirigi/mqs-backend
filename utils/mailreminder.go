@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/miceremwirigi/mqs-backend/models"
@@ -63,7 +64,7 @@ func ReminderCronJob(db *gorm.DB, equipments []models.Equipment, smtpHost string
 	nrb, _ := time.LoadLocation("Africa/Nairobi")
 	c := cron.New(cron.WithLocation(nrb))
 	c.AddFunc("@every 30s", func() { // Every 30 seconds for testing
-	// c.AddFunc("34 8 * * *", func() { // Every day at 7:00 AM
+		// c.AddFunc("34 8 * * *", func() { // Every day at 7:00 AM
 		for _, eq := range equipments {
 			if ShouldSendReminder(eq) {
 				engineersEmail := eq.EngineersEmail()
@@ -81,6 +82,7 @@ func ReminderCronJob(db *gorm.DB, equipments []models.Equipment, smtpHost string
 				updateReminderDate(db, eq.ID.String(), now) // <-- Save to DB
 			}
 		}
+		log.Println("Reminder emails sent successfully")
 	})
 	c.Start()
 }
