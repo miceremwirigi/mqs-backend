@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"log"
+
 	"github.com/miceremwirigi/mqs-backend/models"
 	"gorm.io/gorm"
 )
@@ -20,5 +22,6 @@ func RunCronJobs(db *gorm.DB) {
 
 	// Schedule the reminder cron job
 	ReminderCronJob(db, equipments, smtpHost, smtpPort, smtpUser, smtpPass, UpdateReminderDate)
-
+	
+	log.Println("Reminder cron job scheduled successfully")
 }
