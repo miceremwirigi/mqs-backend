@@ -65,6 +65,7 @@ func ReminderCronJob(db *gorm.DB, equipments []models.Equipment, smtpHost string
 	c := cron.New(cron.WithLocation(nrb))
 	c.AddFunc("@every 30s", func() { // Every 30 seconds for testing
 		// c.AddFunc("34 8 * * *", func() { // Every day at 7:00 AM
+
 		for _, eq := range equipments {
 			if ShouldSendReminder(eq) {
 				engineersEmail := eq.EngineersEmail()
