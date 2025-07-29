@@ -60,9 +60,10 @@ func UpdateReminderDate(db *gorm.DB, id string, t time.Time) {
 
 // ReminderCronJob runs every morning and sends equipment service due reminders
 func ReminderCronJob(db *gorm.DB, equipments []models.Equipment, smtpHost string, smtpPort int, smtpUser, smtpPass string, updateReminderDate func(db *gorm.DB, id string, t time.Time)) {
-	c := cron.New()
+	nrb, _ := time.LoadLocation("Africa/Nairobi")
+	c := cron.New(cron.WithLocation(nrb))
 	// c.AddFunc("@every 30s", func() { // Every 30 seconds for testing
-	c.AddFunc("0 7 * * *", func() { // Every day at 7:00 AM
+	c.AddFunc("34 8 * * *", func() { // Every day at 7:00 AM
 		for _, eq := range equipments {
 			if ShouldSendReminder(eq) {
 				engineersEmail := eq.EngineersEmail()
