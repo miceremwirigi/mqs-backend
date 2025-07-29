@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"log"
+	"net"
 	"time"
 
 	"github.com/miceremwirigi/mqs-backend/models"
@@ -20,7 +21,8 @@ func ShouldSendReminder(eq models.Equipment) bool {
 	if eq.LastReminderDate == nil {
 		return true
 	}
-	return time.Since(*eq.LastReminderDate) > 5*24*time.Hour
+	return time.Since(*eq.LastReminderDate) > 30*time.Second
+	// return time.Since(*eq.LastReminderDate) > 5*24*time.Hour
 }
 
 // SendReminderEmail sends an email using SMTP
@@ -61,6 +63,7 @@ func UpdateReminderDate(db *gorm.DB, id string, t time.Time) {
 
 // ReminderCronJob runs every morning and sends equipment service due reminders
 func ReminderCronJob(db *gorm.DB, equipments []models.Equipment, smtpHost string, smtpPort int, smtpUser, smtpPass string, updateReminderDate func(db *gorm.DB, id string, t time.Time)) {
+	var reminderSent = false
 	nrb, _ := time.LoadLocation("Africa/Nairobi")
 	c := cron.New(cron.WithLocation(nrb))
 	c.AddFunc("@every 30s", func() { // Every 30 seconds for testing
@@ -73,17 +76,45 @@ func ReminderCronJob(db *gorm.DB, equipments []models.Equipment, smtpHost string
 				subject := fmt.Sprintf("Service Due: %s", eq.Name)
 				// Send to engineer
 				if engineersEmail != "" {
-					_ = SendReminderEmail(smtpHost, smtpPort, smtpUser, smtpPass, engineersEmail, subject, html)
+					err := SendReminderEmail(smtpHost, smtpPort, smtpUser, smtpPass, engineersEmail, subject, html)
+					if err != nil {
+						if opErr, ok := err.(*net.OpError); ok {
+							if opErr.Op == "write" && opErr.Err.Error() == "broken pipe" {
+								log.Printf("Broken pipe error sending reminder email to engineer %s: %v", engineersEmail, err)
+							}
+							if opErr.Timeout() {
+							log.Printf("Timeout sending reminder email to engineer %s: %v", engineersEmail, err)
+							}
+						}
+						if opErr, ok := err.(*net.OpError); ok && opErr.Temporary() {
+							log.Printf("Temporary error sending reminder email to engineer %s: %v", engineersEmail, err)
+						} else {
+						log.Printf("Failed to send reminder email to engineer %s: %v", engineersEmail, err)
+						}
+					} else if !reminderSent {
+						reminderSent = true
+					}
 				}
 				// Send to hospital
 				if eq.Hospital.Email != "" {
-					_ = SendReminderEmail(smtpHost, smtpPort, smtpUser, smtpPass, eq.Hospital.Email, subject, html)
+					err := SendReminderEmail(smtpHost, smtpPort, smtpUser, smtpPass, eq.Hospital.Email, subject, html)
+					if err != nil {
+						log.Printf("Failed to send reminder email to hospital %s: %v", eq.Hospital.Email, err)
+					} else if !reminderSent {
+						reminderSent = true
+					}
 				}
 				now := time.Now()
 				updateReminderDate(db, eq.ID.String(), now) // <-- Save to DB
 			}
 		}
-		log.Println("Reminder emails sent successfully")
+		if reminderSent {
+			log.Println("Reminder emails sent successfully")
+			reminderSent = false // Reset for the next run
+		} else {
+			log.Println("No reminders to send at this time")
+		}
+
 	})
 	c.Start()
 }
