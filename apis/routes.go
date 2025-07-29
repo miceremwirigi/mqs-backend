@@ -9,6 +9,7 @@ import (
 	"github.com/miceremwirigi/mqs-backend/apis/equipments"
 	"github.com/miceremwirigi/mqs-backend/apis/hospitals"
 	"github.com/miceremwirigi/mqs-backend/apis/micerejwt"
+	"github.com/miceremwirigi/mqs-backend/apis/scheduledtasks"
 	"github.com/miceremwirigi/mqs-backend/apis/services"
 	"github.com/miceremwirigi/mqs-backend/apis/users"
 	"gorm.io/gorm"
@@ -107,4 +108,10 @@ func RegisterRoutes(app *fiber.App, db *gorm.DB) {
 	departmentsRoutes := api.Group("/departments")
 	departmentsRoutes.Get("/", departmentsHandler.GetAllDepartments)
 	departmentsRoutes.Post("/", departmentsHandler.AddDepartment)
+
+	//UNPROTECTED ROUTES
+	// --- Scheduled Tasks ---
+	scheduledTasksHandler := &scheduledtasks.Handler{DB: db}
+	scheduledTasksRoutes := app.Group("/scheduled-tasks")
+	scheduledTasksRoutes.Get("/send-all-email-reminders", scheduledTasksHandler.SendEmailAllReminders)
 }
