@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"log"
+	"net"
 	"time"
 
 	"github.com/miceremwirigi/mqs-backend/models"
@@ -77,7 +78,19 @@ func ReminderCronJob(db *gorm.DB, equipments []models.Equipment, smtpHost string
 				if engineersEmail != "" {
 					err := SendReminderEmail(smtpHost, smtpPort, smtpUser, smtpPass, engineersEmail, subject, html)
 					if err != nil {
+						if opErr, ok := err.(*net.OpError); ok {
+							if opErr.Op == "write" && opErr.Err.Error() == "broken pipe" {
+								log.Printf("Broken pipe error sending reminder email to engineer %s: %v", engineersEmail, err)
+							}
+							if opErr.Timeout() {
+							log.Printf("Timeout sending reminder email to engineer %s: %v", engineersEmail, err)
+							}
+						}
+						if opErr, ok := err.(*net.OpError); ok && opErr.Temporary() {
+							log.Printf("Temporary error sending reminder email to engineer %s: %v", engineersEmail, err)
+						} else {
 						log.Printf("Failed to send reminder email to engineer %s: %v", engineersEmail, err)
+						}
 					} else if !reminderSent {
 						reminderSent = true
 					}
