@@ -33,7 +33,9 @@ func main() {
 	apis.RegisterRoutes(app, db)
 
 	// Start the cron jobs
-	utils.RunCronJobs(db)
+	go func() {
+		utils.RunCronJobs(db)
+	}()
 
 	// Start the server
 	app.Listen(":3000")
