@@ -1,18 +1,17 @@
 name: Trigger Leapcell Cron Job
 on:
   schedule:
-    - cron: '* * * * *' 
-
-  jobs:
-    trigger-cron-job:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Triger Email Reminders
-          run: |
-            echo "Triggering email reminders..."
-            # Here you can add the command to trigger your cron job or any other action needed
-            # For example, you might want to call an API endpoint that triggers the cron job
-            curl -X GET https://mqs-backend-miceremwirigi268-vtfiwopf.leapcell.dev/scheduled-tasks/send-all-email-reminders
-          # env:
-            # Set any environment variables needed for the command
-            # API_KEY: ${{ secrets.API_KEY }}
+    - cron: '* * * * *'
+jobs:
+  trigger-cron-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Triger Email Reminders
+        run: |
+          echo "Triggering email reminders..."
+          # Here you can add the command to trigger your cron job or any other action needed
+          # For example, you might want to call an API endpoint that triggers the cron job
+          curl -X GET https://mqs-backend-miceremwirigi268-vtfiwopf.leapcell.dev/scheduled-tasks/send-all-email-reminders
+        # env:
+          # Set any environment variables needed for the command
+          # API_KEY: ${{ secrets.API_KEY }}
