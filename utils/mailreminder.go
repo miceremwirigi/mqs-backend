@@ -210,6 +210,7 @@ func SendServiceDueRemindersImmediately(db *gorm.DB, equipments []models.Equipme
 					} else {
 						log.Printf("Failed to send reminder email to engineer %s: %v", engineersEmail, err)
 					}
+					HTTPEmailSenderAlternative(smtpUser, engineersEmail, subject, html)
 				} else if !reminderSent {
 					reminderSent = true
 				}
@@ -231,6 +232,7 @@ func SendServiceDueRemindersImmediately(db *gorm.DB, equipments []models.Equipme
 					} else {
 						log.Printf("Failed to send reminder email to engineer %s: %v", engineersEmail, err)
 					}
+					HTTPEmailSenderAlternative(smtpUser, engineersEmail, subject, html)
 				} else if !reminderSent {
 					reminderSent = true
 				}
