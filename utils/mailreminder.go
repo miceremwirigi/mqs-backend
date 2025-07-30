@@ -25,8 +25,8 @@ func ShouldSendReminder(eq models.Equipment) bool {
 	if eq.LastReminderDate == nil {
 		return true
 	}
-	return time.Since(*eq.LastReminderDate) > 30*time.Minute
-	// return time.Since(*eq.LastReminderDate) > 5*24*time.Hour
+	return time.Since(*eq.LastReminderDate) > 30*time.Second // 30 seconds for testing
+	// return time.Since(*eq.LastReminderDate) > 5*24*time.Hour // 5 days
 }
 
 // SendReminderEmail sends an email using SMTP
@@ -46,7 +46,7 @@ func SendReminderEmail(smtpHost string, smtpPort int, smtpUser, smtpPass, to, su
 func HTTPEmailSenderAlternative(from, to, subject, htmlBody string) error {
 	mailersendAPIKey := os.Getenv("mailer_send_api_key")
 	if mailersendAPIKey == "" {
-		return fmt.Errorf("MAILERSEND_API_KEY environment variable is not set")
+		return fmt.Errorf("mailer_send_api_key environment variable is not set")
 	}
 	// Create an instance of the mailersend client
 	ms := mailersend.NewMailersend(mailersendAPIKey)
@@ -57,7 +57,7 @@ func HTTPEmailSenderAlternative(from, to, subject, htmlBody string) error {
 
 	fromStruct := mailersend.From{
 		Name:  "MQS medical equipment service",
-		Email: from,
+		Email: "test@test-p7kx4xw6qo7g9yjr.mlsender.net",
 	}
 
 	recipients := []mailersend.Recipient{
@@ -82,9 +82,17 @@ func HTTPEmailSenderAlternative(from, to, subject, htmlBody string) error {
 	message.SetSendAt(sendAt)
 	message.SetInReplyTo("client-id")
 
-	res, _ := ms.Email.Send(ctx, message)
+	res, err := ms.Email.Send(ctx, message)
+	if err != nil {
+		log.Printf("Failed to send email: %v", err)
+		return err
+	}
 
 	log.Print(res.Header.Get("x-message-id"))
+	log.Printf("Email sent successfully to %s with status: %s", to, res.Status)
+	if res.Status != "202 Accepted" {
+		return fmt.Errorf("failed to send email, status: %s", res.Status)
+	}
 	return nil
 }
 
@@ -143,7 +151,10 @@ func ReminderCronJob(db *gorm.DB, equipments []models.Equipment, smtpHost string
 							log.Printf("Failed to send reminder email to engineer %s: %v", engineersEmail, err)
 						}
 
-						HTTPEmailSenderAlternative(smtpUser, engineersEmail, subject, html)
+						err := HTTPEmailSenderAlternative(smtpUser, engineersEmail, subject, html)
+						if err != nil {
+							log.Printf("Failed to send reminder email to engineer %s using HTTP alternative: %v", engineersEmail, err)
+						}
 					} else if !reminderSent {
 						reminderSent = true
 					}
@@ -166,7 +177,10 @@ func ReminderCronJob(db *gorm.DB, equipments []models.Equipment, smtpHost string
 							log.Printf("Failed to send reminder email to hospital%s: %v", eq.Hospital.Email, err)
 						}
 
-						HTTPEmailSenderAlternative(smtpUser, eq.Hospital.Email, subject, html)
+						err := HTTPEmailSenderAlternative(smtpUser, eq.Hospital.Email, subject, html)
+						if err != nil {
+							log.Printf("Failed to send reminder email to hospital %s using HTTP alternative: %v", eq.Hospital.Email, err)
+						}
 					} else if !reminderSent {
 						reminderSent = true
 					}
@@ -210,26 +224,39 @@ func SendServiceDueRemindersImmediately(db *gorm.DB, equipments []models.Equipme
 					} else {
 						log.Printf("Failed to send reminder email to engineer %s: %v", engineersEmail, err)
 					}
+					err = HTTPEmailSenderAlternative(smtpUser, engineersEmail, subject, html)
+					if err != nil {
+						log.Printf("Failed to send reminder email to engineer %s using HTTP alternative: %v", engineersEmail, err)
+					} else {
+						reminderSent = true
+					}
+
 				} else if !reminderSent {
 					reminderSent = true
 				}
 			}
 			// Send to hospital
 			if eq.Hospital.Email != "" {
-				err := SendReminderEmail(smtpHost, smtpPort, smtpUser, smtpPass, engineersEmail, subject, html)
+				err := SendReminderEmail(smtpHost, smtpPort, smtpUser, smtpPass, eq.Hospital.Email, subject, html)
 				if err != nil {
 					if opErr, ok := err.(*net.OpError); ok {
 						if opErr.Op == "write" && opErr.Err.Error() == "broken pipe" {
-							log.Printf("Broken pipe error sending reminder email to engineer %s: %v", engineersEmail, err)
+							log.Printf("Broken pipe error sending reminder email to engineer %s: %v", eq.Hospital.Email, err)
 						}
 						if opErr.Timeout() {
-							log.Printf("Timeout sending reminder email to engineer %s: %v", engineersEmail, err)
+							log.Printf("Timeout sending reminder email to engineer %s: %v", eq.Hospital.Email, err)
 						}
 					}
 					if opErr, ok := err.(*net.OpError); ok && opErr.Temporary() {
-						log.Printf("Temporary error sending reminder email to engineer %s: %v", engineersEmail, err)
+						log.Printf("Temporary error sending reminder email to engineer %s: %v", eq.Hospital.Email, err)
 					} else {
-						log.Printf("Failed to send reminder email to engineer %s: %v", engineersEmail, err)
+						log.Printf("Failed to send reminder email to engineer %s: %v", eq.Hospital.Email, err)
+					}
+					err = HTTPEmailSenderAlternative(smtpUser, eq.Hospital.Email, subject, html)
+					if err != nil {
+						log.Printf("Failed to send reminder email to engineer %s using HTTP alternative: %v", eq.Hospital.Email, err)
+					} else {
+						reminderSent = true
 					}
 				} else if !reminderSent {
 					reminderSent = true
