@@ -1,5 +1,8 @@
 name: Trigger Leapcell Cron Job
 on:
+  push:
+    branches:
+      - master
   schedule:
     - cron: '* * * * *'
 jobs:
