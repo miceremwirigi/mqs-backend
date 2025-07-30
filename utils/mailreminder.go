@@ -25,7 +25,7 @@ func ShouldSendReminder(eq models.Equipment) bool {
 	if eq.LastReminderDate == nil {
 		return true
 	}
-	return time.Since(*eq.LastReminderDate) > 30*time.Second
+	return time.Since(*eq.LastReminderDate) > 30*time.Minute
 	// return time.Since(*eq.LastReminderDate) > 5*24*time.Hour
 }
 
@@ -141,7 +141,8 @@ func ReminderCronJob(db *gorm.DB, equipments []models.Equipment, smtpHost string
 							log.Printf("Temporary error sending reminder email to engineer %s: %v", engineersEmail, err)
 						} else {
 							log.Printf("Failed to send reminder email to engineer %s: %v", engineersEmail, err)
-						}						
+						}
+
 						HTTPEmailSenderAlternative(smtpUser, engineersEmail, subject, html)
 					} else if !reminderSent {
 						reminderSent = true
@@ -163,7 +164,8 @@ func ReminderCronJob(db *gorm.DB, equipments []models.Equipment, smtpHost string
 							log.Printf("Temporary error sending reminder email to hospital%s: %v", eq.Hospital.Email, err)
 						} else {
 							log.Printf("Failed to send reminder email to hospital%s: %v", eq.Hospital.Email, err)
-						}						
+						}
+
 						HTTPEmailSenderAlternative(smtpUser, eq.Hospital.Email, subject, html)
 					} else if !reminderSent {
 						reminderSent = true
@@ -214,9 +216,21 @@ func SendServiceDueRemindersImmediately(db *gorm.DB, equipments []models.Equipme
 			}
 			// Send to hospital
 			if eq.Hospital.Email != "" {
-				err := SendReminderEmail(smtpHost, smtpPort, smtpUser, smtpPass, eq.Hospital.Email, subject, html)
+				err := SendReminderEmail(smtpHost, smtpPort, smtpUser, smtpPass, engineersEmail, subject, html)
 				if err != nil {
-					log.Printf("Failed to send reminder email to hospital %s: %v", eq.Hospital.Email, err)
+					if opErr, ok := err.(*net.OpError); ok {
+						if opErr.Op == "write" && opErr.Err.Error() == "broken pipe" {
+							log.Printf("Broken pipe error sending reminder email to engineer %s: %v", engineersEmail, err)
+						}
+						if opErr.Timeout() {
+							log.Printf("Timeout sending reminder email to engineer %s: %v", engineersEmail, err)
+						}
+					}
+					if opErr, ok := err.(*net.OpError); ok && opErr.Temporary() {
+						log.Printf("Temporary error sending reminder email to engineer %s: %v", engineersEmail, err)
+					} else {
+						log.Printf("Failed to send reminder email to engineer %s: %v", engineersEmail, err)
+					}
 				} else if !reminderSent {
 					reminderSent = true
 				}
