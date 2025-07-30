@@ -142,6 +142,7 @@ func ReminderCronJob(db *gorm.DB, equipments []models.Equipment, smtpHost string
 						} else {
 							log.Printf("Failed to send reminder email to engineer %s: %v", engineersEmail, err)
 						}
+
 						HTTPEmailSenderAlternative(smtpUser, engineersEmail, subject, html)
 					} else if !reminderSent {
 						reminderSent = true
@@ -164,6 +165,7 @@ func ReminderCronJob(db *gorm.DB, equipments []models.Equipment, smtpHost string
 						} else {
 							log.Printf("Failed to send reminder email to hospital%s: %v", eq.Hospital.Email, err)
 						}
+
 						HTTPEmailSenderAlternative(smtpUser, eq.Hospital.Email, subject, html)
 					} else if !reminderSent {
 						reminderSent = true
