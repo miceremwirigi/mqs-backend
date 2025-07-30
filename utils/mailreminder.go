@@ -1,11 +1,15 @@
 package utils
 
 import (
+	"context"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"time"
 
+	"github.com/mailersend/mailersend-go"
 	"github.com/miceremwirigi/mqs-backend/models"
 	"github.com/robfig/cron/v3"
 	"gopkg.in/gomail.v2"
@@ -21,7 +25,7 @@ func ShouldSendReminder(eq models.Equipment) bool {
 	if eq.LastReminderDate == nil {
 		return true
 	}
-	return time.Since(*eq.LastReminderDate) > 30*time.Second
+	return time.Since(*eq.LastReminderDate) > 30*time.Minute
 	// return time.Since(*eq.LastReminderDate) > 5*24*time.Hour
 }
 
@@ -34,7 +38,54 @@ func SendReminderEmail(smtpHost string, smtpPort int, smtpUser, smtpPass, to, su
 	m.SetBody("text/html", htmlBody)
 
 	d := gomail.NewDialer(smtpHost, smtpPort, smtpUser, smtpPass)
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: false, ServerName: smtpHost} // Explicit TLS config is good practice
+
 	return d.DialAndSend(m)
+}
+
+func HTTPEmailSenderAlternative(from, to, subject, htmlBody string) error {
+	mailersendAPIKey := os.Getenv("mailer_send_api_key")
+	if mailersendAPIKey == "" {
+		return fmt.Errorf("MAILERSEND_API_KEY environment variable is not set")
+	}
+	// Create an instance of the mailersend client
+	ms := mailersend.NewMailersend(mailersendAPIKey)
+
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	fromStruct := mailersend.From{
+		Name:  "MQS medical equipment service",
+		Email: from,
+	}
+
+	recipients := []mailersend.Recipient{
+		{
+			Name:  "Dear Client",
+			Email: to,
+		},
+	}
+
+	// Send in 5 seconds
+	sendAt := time.Now().Add(time.Second * 5).Unix()
+
+	tags := []string{"important", "service-reminder", "equipment"}
+
+	message := ms.Email.NewMessage()
+
+	message.SetFrom(fromStruct)
+	message.SetRecipients(recipients)
+	message.SetSubject(subject)
+	message.SetHTML(htmlBody)
+	message.SetTags(tags)
+	message.SetSendAt(sendAt)
+	message.SetInReplyTo("client-id")
+
+	res, _ := ms.Email.Send(ctx, message)
+
+	log.Print(res.Header.Get("x-message-id"))
+	return nil
 }
 
 // ReminderHTMLTemplate returns the HTML email body
@@ -91,6 +142,7 @@ func ReminderCronJob(db *gorm.DB, equipments []models.Equipment, smtpHost string
 						} else {
 							log.Printf("Failed to send reminder email to engineer %s: %v", engineersEmail, err)
 						}
+						HTTPEmailSenderAlternative(smtpUser, engineersEmail, subject, html)
 					} else if !reminderSent {
 						reminderSent = true
 					}
@@ -99,7 +151,20 @@ func ReminderCronJob(db *gorm.DB, equipments []models.Equipment, smtpHost string
 				if eq.Hospital.Email != "" {
 					err := SendReminderEmail(smtpHost, smtpPort, smtpUser, smtpPass, eq.Hospital.Email, subject, html)
 					if err != nil {
-						log.Printf("Failed to send reminder email to hospital %s: %v", eq.Hospital.Email, err)
+						if opErr, ok := err.(*net.OpError); ok {
+							if opErr.Op == "write" && opErr.Err.Error() == "broken pipe" {
+								log.Printf("Broken pipe error sending reminder email to hospital%s: %v", eq.Hospital.Email, err)
+							}
+							if opErr.Timeout() {
+								log.Printf("Timeout sending reminder email to hospital%s: %v", eq.Hospital.Email, err)
+							}
+						}
+						if opErr, ok := err.(*net.OpError); ok && opErr.Temporary() {
+							log.Printf("Temporary error sending reminder email to hospital%s: %v", eq.Hospital.Email, err)
+						} else {
+							log.Printf("Failed to send reminder email to hospital%s: %v", eq.Hospital.Email, err)
+						}
+						HTTPEmailSenderAlternative(smtpUser, eq.Hospital.Email, subject, html)
 					} else if !reminderSent {
 						reminderSent = true
 					}
@@ -119,7 +184,7 @@ func ReminderCronJob(db *gorm.DB, equipments []models.Equipment, smtpHost string
 	c.Start()
 }
 
-func SendServicuDueRemindersImmediately(db *gorm.DB, equipments []models.Equipment, smtpHost string, smtpPort int, smtpUser, smtpPass string, updateReminderDate func(db *gorm.DB, id string, t time.Time)) {
+func SendServiceDueRemindersImmediately(db *gorm.DB, equipments []models.Equipment, smtpHost string, smtpPort int, smtpUser, smtpPass string, updateReminderDate func(db *gorm.DB, id string, t time.Time)) {
 	var reminderSent = false
 	for _, eq := range equipments {
 		if ShouldSendReminder(eq) {
@@ -149,9 +214,21 @@ func SendServicuDueRemindersImmediately(db *gorm.DB, equipments []models.Equipme
 			}
 			// Send to hospital
 			if eq.Hospital.Email != "" {
-				err := SendReminderEmail(smtpHost, smtpPort, smtpUser, smtpPass, eq.Hospital.Email, subject, html)
+				err := SendReminderEmail(smtpHost, smtpPort, smtpUser, smtpPass, engineersEmail, subject, html)
 				if err != nil {
-					log.Printf("Failed to send reminder email to hospital %s: %v", eq.Hospital.Email, err)
+					if opErr, ok := err.(*net.OpError); ok {
+						if opErr.Op == "write" && opErr.Err.Error() == "broken pipe" {
+							log.Printf("Broken pipe error sending reminder email to engineer %s: %v", engineersEmail, err)
+						}
+						if opErr.Timeout() {
+							log.Printf("Timeout sending reminder email to engineer %s: %v", engineersEmail, err)
+						}
+					}
+					if opErr, ok := err.(*net.OpError); ok && opErr.Temporary() {
+						log.Printf("Temporary error sending reminder email to engineer %s: %v", engineersEmail, err)
+					} else {
+						log.Printf("Failed to send reminder email to engineer %s: %v", engineersEmail, err)
+					}
 				} else if !reminderSent {
 					reminderSent = true
 				}

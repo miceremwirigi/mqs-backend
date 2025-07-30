@@ -21,7 +21,7 @@ func RunCronJobs(db *gorm.DB) {
 	}
 
 	// Send service due emails immedualely
-	SendServicuDueRemindersImmediately(db, equipments, smtpHost, smtpPort, smtpUser, smtpPass, UpdateReminderDate)
+	SendServiceDueRemindersImmediately(db, equipments, smtpHost, smtpPort, smtpUser, smtpPass, UpdateReminderDate)
 	
 	// Schedule regular email reminder cron job
 	ReminderCronJob(db, equipments, smtpHost, smtpPort, smtpUser, smtpPass, UpdateReminderDate)
