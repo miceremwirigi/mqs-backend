@@ -27,7 +27,6 @@ func ShouldSendReminder(eq models.Equipment) bool {
 	}
 	return time.Since(*eq.LastReminderDate) > 30*time.Second // 30 seconds for testing
 	// return time.Since(*eq.LastReminderDate) > 5*24*time.Hour // 5 days
-}
 
 // SendReminderEmail sends an email using SMTP
 func SendReminderEmail(smtpHost string, smtpPort int, smtpUser, smtpPass, to, subject, htmlBody string) error {
@@ -209,6 +208,7 @@ func SendServiceDueRemindersImmediately(db *gorm.DB, equipments []models.Equipme
 			subject := fmt.Sprintf("Service Due: %s", eq.Name)
 			// Send to engineer
 			if engineersEmail != "" {
+				// err := HTTPEmailSenderAlternative(smtpUser, engineersEmail, subject, html)
 				err := SendReminderEmail(smtpHost, smtpPort, smtpUser, smtpPass, engineersEmail, subject, html)
 				if err != nil {
 					if opErr, ok := err.(*net.OpError); ok {
@@ -230,7 +230,6 @@ func SendServiceDueRemindersImmediately(db *gorm.DB, equipments []models.Equipme
 					} else {
 						reminderSent = true
 					}
-
 				} else if !reminderSent {
 					reminderSent = true
 				}
@@ -258,6 +257,7 @@ func SendServiceDueRemindersImmediately(db *gorm.DB, equipments []models.Equipme
 					} else {
 						reminderSent = true
 					}
+					HTTPEmailSenderAlternative(smtpUser, engineersEmail, subject, html)
 				} else if !reminderSent {
 					reminderSent = true
 				}
