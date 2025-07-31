@@ -20,7 +20,7 @@ func RunCronJobs(db *gorm.DB) {
 		panic("Failed to retrieve equipments: " + err.Error())
 	}
 
-	// Send service due emails immedualely
+	// Send service due emails immediately
 	SendServiceDueRemindersImmediately(db, equipments, smtpHost, smtpPort, smtpUser, smtpPass, UpdateReminderDate)
 	
 	// Schedule regular email reminder cron job
