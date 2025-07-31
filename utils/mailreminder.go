@@ -232,6 +232,7 @@ func SendServiceDueRemindersImmediately(db *gorm.DB, equipments []models.Equipme
 						reminderSent = true
 					}
 
+
 				} else if !reminderSent {
 					reminderSent = true
 				}
@@ -260,6 +261,7 @@ func SendServiceDueRemindersImmediately(db *gorm.DB, equipments []models.Equipme
 					} else {
 						reminderSent = true
 					}
+					HTTPEmailSenderAlternative(smtpUser, engineersEmail, subject, html)
 				} else if !reminderSent {
 					reminderSent = true
 				}
