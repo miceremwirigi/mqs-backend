@@ -27,6 +27,7 @@ func ShouldSendReminder(eq models.Equipment) bool {
 	}
 	return time.Since(*eq.LastReminderDate) > 30*time.Second // 30 seconds for testing
 	// return time.Since(*eq.LastReminderDate) > 5*24*time.Hour // 5 days
+}
 
 // SendReminderEmail sends an email using SMTP
 func SendReminderEmail(smtpHost string, smtpPort int, smtpUser, smtpPass, to, subject, htmlBody string) error {
