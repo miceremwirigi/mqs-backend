@@ -241,20 +241,20 @@ func SendServiceDueRemindersImmediately(db *gorm.DB, equipments []models.Equipme
 				if err != nil {
 					if opErr, ok := err.(*net.OpError); ok {
 						if opErr.Op == "write" && opErr.Err.Error() == "broken pipe" {
-							log.Printf("Broken pipe error sending reminder email to engineer %s: %v", eq.Hospital.Email, err)
+							log.Printf("Broken pipe error sending reminder email to hospital %s: %v", eq.Hospital.Email, err)
 						}
 						if opErr.Timeout() {
-							log.Printf("Timeout sending reminder email to engineer %s: %v", eq.Hospital.Email, err)
+							log.Printf("Timeout sending reminder email to hospital %s: %v", eq.Hospital.Email, err)
 						}
 					}
 					if opErr, ok := err.(*net.OpError); ok && opErr.Temporary() {
-						log.Printf("Temporary error sending reminder email to engineer %s: %v", eq.Hospital.Email, err)
+						log.Printf("Temporary error sending reminder email to hospital %s: %v", eq.Hospital.Email, err)
 					} else {
-						log.Printf("Failed to send reminder email to engineer %s: %v", eq.Hospital.Email, err)
+						log.Printf("Failed to send reminder email to hospital %s: %v", eq.Hospital.Email, err)
 					}
 					err = HTTPEmailSenderAlternative(smtpUser, eq.Hospital.Email, subject, html)
 					if err != nil {
-						log.Printf("Failed to send reminder email to engineer %s using HTTP alternative: %v", eq.Hospital.Email, err)
+						log.Printf("Failed to send reminder email to hospital %s using HTTP alternative: %v", eq.Hospital.Email, err)
 					} else {
 						reminderSent = true
 					}
